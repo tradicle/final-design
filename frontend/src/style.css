@@ -1,0 +1,61 @@
+:root {
+  font-family: "PingFang SC", "Microsoft YaHei", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  line-height: 1.6;
+  font-weight: 400;
+  --el-color-primary: #cf5f3f;
+  --el-color-primary-light-3: #db8369;
+  --el-color-primary-light-5: #e4a18c;
+  --el-color-primary-light-7: #edc1b4;
+  --el-color-primary-light-9: #f8ece7;
+  --el-color-primary-dark-2: #b54a2d;
+  --page-bg: #f4f5f6;
+  --card-bg: #ffffff;
+  --text-main: #1e252d;
+  --text-regular: #4b5563;
+  --text-light: #8693a0;
+  --line-soft: #e8ebef;
+  --shadow-soft: 0 14px 40px rgba(13, 23, 38, 0.08);
+  --radius-xl: 16px;
+  color: var(--text-main);
+  background-color: var(--page-bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: radial-gradient(circle at 0% 0%, #ffffff 0%, var(--page-bg) 55%);
+  color: var(--text-main);
+}
+
+#app {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.el-card {
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-soft);
+}
+
+.el-button {
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
