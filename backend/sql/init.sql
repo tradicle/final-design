@@ -4,11 +4,18 @@ USE animal_db;
 
 -- Drop tables if they exist to reset data
 DROP TABLE IF EXISTS sys_user;
+DROP TABLE IF EXISTS default_avatar;
 DROP TABLE IF EXISTS animal_location;
 DROP TABLE IF EXISTS animal;
-DROP TABLE IF EXISTS clue;
 DROP TABLE IF EXISTS news;
 DROP TABLE IF EXISTS donation;
+DROP TABLE IF EXISTS donation_record;
+DROP TABLE IF EXISTS donation_claim;
+DROP TABLE IF EXISTS urgent_need;
+DROP TABLE IF EXISTS weekly_update;
+DROP TABLE IF EXISTS transparency_record;
+DROP TABLE IF EXISTS system_config;
+DROP TABLE IF EXISTS adoption_application;
 DROP TABLE IF EXISTS comment;
 DROP TABLE IF EXISTS post;
 DROP TABLE IF EXISTS knowledge;
@@ -17,13 +24,23 @@ DROP TABLE IF EXISTS knowledge;
 CREATE TABLE sys_user (
     id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT 'Primary Key',
     username VARCHAR(50) NOT NULL UNIQUE COMMENT 'Username',
+    nickname VARCHAR(50) COMMENT 'Nickname',
     password VARCHAR(100) NOT NULL COMMENT 'Password',
     email VARCHAR(100) COMMENT 'Email',
     role VARCHAR(20) DEFAULT 'USER' COMMENT 'Role: USER, ADMIN',
-    avatar VARCHAR(255) COMMENT 'User Avatar',
+    avatar LONGTEXT COMMENT 'User Avatar',
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Create Time',
     update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Update Time'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='System User Table';
+
+CREATE TABLE default_avatar (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT 'Primary Key',
+    name VARCHAR(50) NOT NULL COMMENT 'Avatar Name',
+    image_data LONGTEXT NOT NULL COMMENT 'Avatar Image Data URI',
+    sort_order INT DEFAULT 0 COMMENT 'Sort Order',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Create Time',
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Update Time'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Default Avatar Table';
 
 -- Animal Profile Table
 CREATE TABLE animal (
@@ -40,6 +57,7 @@ CREATE TABLE animal (
     status TINYINT(1) DEFAULT 1 COMMENT 'Status: 1-Available, 0-Adopted',
     description TEXT COMMENT 'Description',
     detail_content LONGTEXT COMMENT 'Rich Text Detail',
+    location VARCHAR(255) COMMENT 'Found Location Name',
     latitude DECIMAL(10, 6) COMMENT 'Current Latitude',
     longitude DECIMAL(10, 6) COMMENT 'Current Longitude',
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Create Time',
@@ -55,20 +73,6 @@ CREATE TABLE animal_location (
     record_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Record Time',
     FOREIGN KEY (animal_id) REFERENCES animal(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Animal Location History';
-
--- Clue Table (Stray Animal Reports)
-CREATE TABLE clue (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT 'Primary Key',
-    title VARCHAR(100) NOT NULL COMMENT 'Title',
-    content TEXT COMMENT 'Content',
-    location VARCHAR(255) COMMENT 'Location',
-    contact VARCHAR(50) COMMENT 'Contact Info',
-    image VARCHAR(255) COMMENT 'Image URL',
-    status TINYINT(1) DEFAULT 0 COMMENT 'Status: 0-Pending, 1-Processed',
-    user_id BIGINT COMMENT 'Reporter User ID',
-    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Create Time',
-    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Update Time'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Clue Report Table';
 
 -- News Table (Events/Activities)
 CREATE TABLE news (
@@ -90,6 +94,92 @@ CREATE TABLE donation (
     message VARCHAR(255) COMMENT 'Message',
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Create Time'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Donation Records';
+
+CREATE TABLE donation_record (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT 'Primary Key',
+    date VARCHAR(32) COMMENT 'Display Date',
+    donor VARCHAR(120) COMMENT 'Donor Name',
+    item VARCHAR(255) COMMENT 'Donation Item',
+    sort_order INT DEFAULT 0 COMMENT 'Sort Order',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Create Time',
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Update Time'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Donation Public Records';
+
+CREATE TABLE donation_claim (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT 'Primary Key',
+    need_name VARCHAR(120) COMMENT 'Need Name',
+    need_gap VARCHAR(80) COMMENT 'Current Gap',
+    quantity VARCHAR(80) COMMENT 'Claim Quantity',
+    contact_name VARCHAR(80) COMMENT 'Contact Name',
+    phone VARCHAR(40) COMMENT 'Phone',
+    wechat VARCHAR(80) COMMENT 'Wechat',
+    pickup_date VARCHAR(40) COMMENT 'Pickup Date',
+    remark VARCHAR(500) COMMENT 'Remark',
+    status TINYINT DEFAULT 0 COMMENT '0-Pending 1-Approved 2-Rejected',
+    review_note VARCHAR(255) COMMENT 'Review Note',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Create Time',
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Update Time'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Donation Claim Records';
+
+CREATE TABLE urgent_need (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT 'Primary Key',
+    name VARCHAR(120) COMMENT 'Need Name',
+    gap VARCHAR(80) COMMENT 'Gap Value',
+    updated_at VARCHAR(32) COMMENT 'Updated At Display',
+    sort_order INT DEFAULT 0 COMMENT 'Sort Order',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Create Time',
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Update Time'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Urgent Donation Needs';
+
+CREATE TABLE weekly_update (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT 'Primary Key',
+    title VARCHAR(180) COMMENT 'Title',
+    description VARCHAR(500) COMMENT 'Description',
+    sort_order INT DEFAULT 0 COMMENT 'Sort Order',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Create Time',
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Update Time'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Weekly Updates';
+
+CREATE TABLE transparency_record (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT 'Primary Key',
+    month VARCHAR(20) COMMENT 'Month Label',
+    income VARCHAR(40) COMMENT 'Income Display',
+    expense VARCHAR(40) COMMENT 'Expense Display',
+    note VARCHAR(500) COMMENT 'Note',
+    sort_order INT DEFAULT 0 COMMENT 'Sort Order',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Create Time',
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Update Time'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Transparency Records';
+
+CREATE TABLE system_config (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT 'Primary Key',
+    config_key VARCHAR(120) NOT NULL UNIQUE COMMENT 'Config Key',
+    config_value VARCHAR(255) COMMENT 'Config Value',
+    description VARCHAR(255) COMMENT 'Description',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Create Time',
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Update Time'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='System Configurations';
+
+CREATE TABLE adoption_application (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT 'Primary Key',
+    animal_id BIGINT COMMENT 'Animal ID',
+    user_id BIGINT COMMENT 'Applicant User ID',
+    applicant_name VARCHAR(80) COMMENT 'Applicant Name',
+    age INT COMMENT 'Age',
+    job VARCHAR(120) COMMENT 'Job',
+    income VARCHAR(40) COMMENT 'Income Level',
+    address VARCHAR(255) COMMENT 'Address',
+    phone VARCHAR(40) COMMENT 'Phone',
+    wechat VARCHAR(80) COMMENT 'Wechat',
+    housing VARCHAR(20) COMMENT 'Housing Type',
+    experience VARCHAR(20) COMMENT 'Pet Experience',
+    family_members VARCHAR(255) COMMENT 'Family Members',
+    reason TEXT COMMENT 'Reason',
+    status TINYINT DEFAULT 0 COMMENT '0-Pending 1-Approved 2-Rejected',
+    review_note VARCHAR(255) COMMENT 'Review Note',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Create Time',
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Update Time'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Adoption Applications';
 
 CREATE TABLE knowledge (
     id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT 'Primary Key',
@@ -127,25 +217,25 @@ CREATE TABLE comment (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Community Comments';
 
 -- Insert Sample Users
-INSERT INTO sys_user (username, password, role, avatar) VALUES 
-('admin', 'admin123', 'ADMIN', 'https://api.dicebear.com/9.x/avataaars/svg?seed=admin'),
-('alice', '123456', 'USER', 'https://api.dicebear.com/9.x/avataaars/svg?seed=alice'),
-('bob', '123456', 'USER', 'https://api.dicebear.com/9.x/avataaars/svg?seed=bob'),
-('charlie', '123456', 'USER', 'https://api.dicebear.com/9.x/avataaars/svg?seed=charlie'),
-('david', '123456', 'USER', 'https://api.dicebear.com/9.x/avataaars/svg?seed=david'),
-('eve', '123456', 'USER', 'https://api.dicebear.com/9.x/avataaars/svg?seed=eve');
+INSERT INTO sys_user (username, nickname, password, role, avatar) VALUES 
+('admin', '系统管理员', 'admin123', 'ADMIN', 'https://api.dicebear.com/9.x/avataaars/svg?seed=admin'),
+('alice', 'Alice', '123456', 'USER', 'https://api.dicebear.com/9.x/avataaars/svg?seed=alice'),
+('bob', 'Bob', '123456', 'USER', 'https://api.dicebear.com/9.x/avataaars/svg?seed=bob'),
+('charlie', 'Charlie', '123456', 'USER', 'https://api.dicebear.com/9.x/avataaars/svg?seed=charlie'),
+('david', 'David', '123456', 'USER', 'https://api.dicebear.com/9.x/avataaars/svg?seed=david'),
+('eve', 'Eve', '123456', 'USER', 'https://api.dicebear.com/9.x/avataaars/svg?seed=eve');
 
-INSERT INTO animal (animal_no, name, category, sex, body_size, age, avatar, is_sterilized, activity_scope, status, description, detail_content, latitude, longitude) VALUES
-('SZ753', 'lucky', 'CAT', 'MALE', 'SMALL', 0, 'http://adopt.it267.com/uploads/product/pic/6958d0bef1a17.jpg?imageMogr2/thumbnail/!386x270r/gravity/Center/crop/386x270/quality/80', 0, '深圳市', 1, '2025年11月救助的小黄白猫，性格活泼，适合家庭领养。', '<p>2025年11月救助的小黄白猫，状态稳定，等待领养。</p>', 22.543096, 114.057865),
-('SZ752', '小莎', 'CAT', 'FEMALE', 'SMALL', 0, 'http://adopt.it267.com/uploads/product/pic/6958cf541a948.jpg?imageMogr2/thumbnail/!386x270r/gravity/Center/crop/386x270/quality/80', 0, '深圳市', 1, '小莎为三花幼猫，健康活泼，适合室内饲养。', '<p>小莎来自深圳湾附近救助点，当前状态良好，可预约领养。</p>', 22.543096, 114.057865),
-('SZ751', '小加', 'CAT', 'MALE', 'SMALL', 0, 'http://adopt.it267.com/uploads/product/pic/6958ce2d82c1e.jpg?imageMogr2/thumbnail/!386x270r/gravity/Center/crop/386x270/quality/80', 0, '深圳市', 1, '小加是狸花幼猫，亲人，适应力较好。', '<p>小加由志愿者救助后进入领养中心，目前疫苗驱虫按计划进行。</p>', 22.543096, 114.057865),
-('SZ750', '小桦', 'CAT', 'MALE', 'SMALL', 0, 'http://adopt.it267.com/uploads/product/pic/6958bf9831783.jpg?imageMogr2/thumbnail/!386x270r/gravity/Center/crop/386x270/quality/80', 0, '深圳市', 1, '小桦为狸花幼猫，活泼好动，喜欢互动。', '<p>小桦与同批幼猫一起救助，健康状况稳定，等待新家庭。</p>', 22.543096, 114.057865),
-('SZ749', '瑶瑶', 'CAT', 'FEMALE', 'SMALL', 0, 'http://adopt.it267.com/uploads/product/pic/68634a869c79e.jpg?imageMogr2/thumbnail/!386x270r/gravity/Center/crop/386x270/quality/80', 0, '深圳市', 1, '瑶瑶为橘猫幼猫，性格温顺。', '<p>瑶瑶于2025年救助入站，已完成基础体检，可申请领养。</p>', 22.543096, 114.057865),
-('SZ719', '沙皮', 'DOG', 'MALE', 'MEDIUM', 2, 'http://adopt.it267.com/uploads/product/pic/667d1c46d11c1.jpg?imageMogr2/thumbnail/!386x270r/gravity/Center/crop/386x270/quality/80', 0, '深圳市', 1, '沙皮为串串犬，亲人，适合家庭陪伴。', '<p>沙皮已完成基础免疫，具备领养条件。</p>', 22.543096, 114.057865),
-('SZ718', '黑豆', 'DOG', 'FEMALE', 'MEDIUM', 2, 'http://adopt.it267.com/uploads/product/pic/66485c0c007cf.jpg?imageMogr2/thumbnail/!386x270r/gravity/Center/crop/386x270/quality/80', 0, '深圳市', 1, '黑豆为母串串，性格稳定。', '<p>黑豆目前状态良好，等待负责任领养家庭。</p>', 22.543096, 114.057865),
-('SZ717', '五百', 'DOG', 'MALE', 'MEDIUM', 2, 'http://adopt.it267.com/uploads/product/pic/6648590bc3772.jpg?imageMogr2/thumbnail/!386x270r/gravity/Center/crop/386x270/quality/80', 0, '深圳市', 1, '五百为公串串，活泼外向。', '<p>五百亲人，适合有遛狗条件的家庭。</p>', 22.543096, 114.057865),
-('SZ711', '元宝', 'DOG', 'FEMALE', 'MEDIUM', 2, 'http://adopt.it267.com/uploads/product/pic/664704b0ea083.jpg?imageMogr2/thumbnail/!386x270r/gravity/Center/crop/386x270/quality/80', 0, '深圳市', 1, '元宝为母串串，适合城市家庭。', '<p>元宝已在中心观察一段时间，状态稳定可领养。</p>', 22.543096, 114.057865),
-('SZ710', '六斤', 'DOG', 'FEMALE', 'MEDIUM', 2, 'http://adopt.it267.com/uploads/product/pic/664704e1b359f.jpg?imageMogr2/thumbnail/!386x270r/gravity/Center/crop/386x270/quality/80', 0, '深圳市', 1, '六斤体型适中，亲人。', '<p>六斤适应能力较好，建议有稳定作息的家庭领养。</p>', 22.543096, 114.057865);
+INSERT INTO animal (animal_no, name, category, sex, body_size, age, avatar, is_sterilized, activity_scope, status, description, detail_content, location, latitude, longitude) VALUES
+('SZ753', 'lucky', 'CAT', 'MALE', 'SMALL', 0, 'http://adopt.it267.com/uploads/product/pic/6958d0bef1a17.jpg?imageMogr2/thumbnail/!386x270r/gravity/Center/crop/386x270/quality/80', 0, '深圳市', 1, '2025年11月救助的小黄白猫，性格活泼，适合家庭领养。', '<p>2025年11月救助的小黄白猫，状态稳定，等待领养。</p>', '深圳市福田区莲花山公园附近', 22.543096, 114.057865),
+('SZ752', '小莎', 'CAT', 'FEMALE', 'SMALL', 0, 'http://adopt.it267.com/uploads/product/pic/6958cf541a948.jpg?imageMogr2/thumbnail/!386x270r/gravity/Center/crop/386x270/quality/80', 0, '深圳市', 1, '小莎为三花幼猫，健康活泼，适合室内饲养。', '<p>小莎来自深圳湾附近救助点，当前状态良好，可预约领养。</p>', '深圳湾公园观海栈道附近', 22.543096, 114.057865),
+('SZ751', '小加', 'CAT', 'MALE', 'SMALL', 0, 'http://adopt.it267.com/uploads/product/pic/6958ce2d82c1e.jpg?imageMogr2/thumbnail/!386x270r/gravity/Center/crop/386x270/quality/80', 0, '深圳市', 1, '小加是狸花幼猫，亲人，适应力较好。', '<p>小加由志愿者救助后进入领养中心，目前疫苗驱虫按计划进行。</p>', '深圳市南山区科苑地铁站周边', 22.543096, 114.057865),
+('SZ750', '小桦', 'CAT', 'MALE', 'SMALL', 0, 'http://adopt.it267.com/uploads/product/pic/6958bf9831783.jpg?imageMogr2/thumbnail/!386x270r/gravity/Center/crop/386x270/quality/80', 0, '深圳市', 1, '小桦为狸花幼猫，活泼好动，喜欢互动。', '<p>小桦与同批幼猫一起救助，健康状况稳定，等待新家庭。</p>', '深圳市宝安区西乡步行街附近', 22.543096, 114.057865),
+('SZ749', '瑶瑶', 'CAT', 'FEMALE', 'SMALL', 0, 'http://adopt.it267.com/uploads/product/pic/68634a869c79e.jpg?imageMogr2/thumbnail/!386x270r/gravity/Center/crop/386x270/quality/80', 0, '深圳市', 1, '瑶瑶为橘猫幼猫，性格温顺。', '<p>瑶瑶于2025年救助入站，已完成基础体检，可申请领养。</p>', '深圳市罗湖区东湖公园南门附近', 22.543096, 114.057865),
+('SZ719', '沙皮', 'DOG', 'MALE', 'MEDIUM', 2, 'http://adopt.it267.com/uploads/product/pic/667d1c46d11c1.jpg?imageMogr2/thumbnail/!386x270r/gravity/Center/crop/386x270/quality/80', 0, '深圳市', 1, '沙皮为串串犬，亲人，适合家庭陪伴。', '<p>沙皮已完成基础免疫，具备领养条件。</p>', '深圳市龙华区清湖地铁站附近', 22.543096, 114.057865),
+('SZ718', '黑豆', 'DOG', 'FEMALE', 'MEDIUM', 2, 'http://adopt.it267.com/uploads/product/pic/66485c0c007cf.jpg?imageMogr2/thumbnail/!386x270r/gravity/Center/crop/386x270/quality/80', 0, '深圳市', 1, '黑豆为母串串，性格稳定。', '<p>黑豆目前状态良好，等待负责任领养家庭。</p>', '深圳市龙岗区大运中心附近', 22.543096, 114.057865),
+('SZ717', '五百', 'DOG', 'MALE', 'MEDIUM', 2, 'http://adopt.it267.com/uploads/product/pic/6648590bc3772.jpg?imageMogr2/thumbnail/!386x270r/gravity/Center/crop/386x270/quality/80', 0, '深圳市', 1, '五百为公串串，活泼外向。', '<p>五百亲人，适合有遛狗条件的家庭。</p>', '深圳市福田区香蜜湖公园周边', 22.543096, 114.057865),
+('SZ711', '元宝', 'DOG', 'FEMALE', 'MEDIUM', 2, 'http://adopt.it267.com/uploads/product/pic/664704b0ea083.jpg?imageMogr2/thumbnail/!386x270r/gravity/Center/crop/386x270/quality/80', 0, '深圳市', 1, '元宝为母串串，适合城市家庭。', '<p>元宝已在中心观察一段时间，状态稳定可领养。</p>', '深圳市福田区梅林公园附近', 22.543096, 114.057865),
+('SZ710', '六斤', 'DOG', 'FEMALE', 'MEDIUM', 2, 'http://adopt.it267.com/uploads/product/pic/664704e1b359f.jpg?imageMogr2/thumbnail/!386x270r/gravity/Center/crop/386x270/quality/80', 0, '深圳市', 1, '六斤体型适中，亲人。', '<p>六斤适应能力较好，建议有稳定作息的家庭领养。</p>', '深圳市南山区前海石公园附近', 22.543096, 114.057865);
 
 -- Insert Sample Location History
 INSERT INTO animal_location (animal_id, latitude, longitude) VALUES 
@@ -153,16 +243,13 @@ INSERT INTO animal_location (animal_id, latitude, longitude) VALUES
 INSERT INTO animal_location (animal_id, latitude, longitude) VALUES 
 (2, 39.915, 116.404), (2, 39.916, 116.405), (2, 39.914, 116.403);
 
--- Insert Sample Clues
-INSERT INTO clue (title, content, location, contact, status) VALUES 
-('发现流浪猫', '在公园长椅下发现一只受伤的小猫。', '人民公园', '13800138000', 0),
-('疑似走失金毛', '在超市门口看到一只金毛，没有主人。', '家乐福门口', '13900139000', 0);
-
 -- Insert Sample News
 INSERT INTO news (title, summary, content, cover_image) VALUES 
-('爱心义卖！2026《汪喵漫游世界》公益台历现货发售', '2026汪喵公益台历义卖开始啦！我们今年的任务是卖出2000本台历，凑够冬季取暖费！', '详细内容...', 'https://picsum.photos/800/400?random=1'),
-('给毛孩子的爱与仪式感！生日大餐吃了，年夜饭还会远吗？', '在汪汪喵呜孤儿院，每个曾漂泊的毛孩子，都能拥有属于自己的“仪式感时刻”。', '详细内容...', 'https://picsum.photos/800/400?random=2'),
-('HI，亲们，一起帮流浪猫拼好窝吗？宫猫同款哦！', '立秋了，冬天还会远吗？汪汪喵呜孤儿院流浪猫户外暖冬猫屋开始筹备了！', '详细内容...', 'https://picsum.photos/800/400?random=3');
+('lucky 待领养档案', '猫 · 0岁 · 男孩，活动范围：深圳市', 'PET:SZ753', 'http://adopt.it267.com/uploads/product/pic/6958d0bef1a17.jpg?imageMogr2/thumbnail/!386x270r/gravity/Center/crop/386x270/quality/80'),
+('小莎 待领养档案', '猫 · 0岁 · 女孩，活动范围：深圳市', 'PET:SZ752', 'http://adopt.it267.com/uploads/product/pic/6958cf541a948.jpg?imageMogr2/thumbnail/!386x270r/gravity/Center/crop/386x270/quality/80'),
+('小加 待领养档案', '猫 · 0岁 · 男孩，活动范围：深圳市', 'PET:SZ751', 'http://adopt.it267.com/uploads/product/pic/6958ce2d82c1e.jpg?imageMogr2/thumbnail/!386x270r/gravity/Center/crop/386x270/quality/80'),
+('小桦 待领养档案', '猫 · 0岁 · 男孩，活动范围：深圳市', 'PET:SZ750', 'http://adopt.it267.com/uploads/product/pic/6958bf9831783.jpg?imageMogr2/thumbnail/!386x270r/gravity/Center/crop/386x270/quality/80'),
+('瑶瑶 待领养档案', '猫 · 0岁 · 女孩，活动范围：深圳市', 'PET:SZ749', 'http://adopt.it267.com/uploads/product/pic/68634a869c79e.jpg?imageMogr2/thumbnail/!386x270r/gravity/Center/crop/386x270/quality/80');
 
 -- Insert Sample Posts
 INSERT INTO post (user_id, title, content, location, latitude, longitude) VALUES 
@@ -181,3 +268,35 @@ INSERT INTO knowledge (title, content, sort_order) VALUES
 ('地址二', '深圳地铁2号线—湾厦站A出口—北京银行后海支行附近（猫）', 4),
 ('地址三', '龙岗区大芬百门前工业区2栋7楼宠物领养之家（狗）', 5),
 ('Q群', '26563144', 6);
+
+INSERT INTO weekly_update (title, description, sort_order) VALUES
+('本周新增救助 12 只', '其中幼犬 5 只、幼猫 7 只，均完成基础体检与隔离观察。', 1),
+('本周成功领养 8 只', '已完成家访与回访流程，全部进入稳定适应期。', 2),
+('本周完成绝育 6 只', '减少二次流浪与繁殖风险，持续推进科学救助。', 3);
+
+INSERT INTO transparency_record (month, income, expense, note, sort_order) VALUES
+('2026-01', '¥42,300', '¥39,180', '医疗与疫苗支出占比 49%', 1),
+('2026-02', '¥38,600', '¥36,940', '粮食与寄养支出占比 44%', 2),
+('2026-03', '¥45,200', '¥43,270', '新增救助数量上升，医疗支出增加', 3);
+
+INSERT INTO urgent_need (name, gap, updated_at, sort_order) VALUES
+('幼犬奶糕', '42 袋', '2026-04-05', 1),
+('猫砂（膨润土）', '68 包', '2026-04-05', 2),
+('体内外驱虫药', '26 盒', '2026-04-04', 3),
+('保暖垫', '35 件', '2026-04-03', 4);
+
+INSERT INTO donation_record (date, donor, item, sort_order) VALUES
+('2026-04-01', '张**', '幼犬粮 20kg', 1),
+('2026-03-30', '李**', '猫砂 8 包', 2),
+('2026-03-28', '爱心团体', '应急药品一批', 3),
+('2026-03-25', '王**', '宠物玩具 30 件', 4);
+
+INSERT INTO system_config (config_key, config_value, description) VALUES
+('dashboard.totalRescueCount', '2680', '累计救助可编辑基准值'),
+('dashboard.adoptionSuccessCount', '1930', '成功领养可编辑基准值');
+
+INSERT INTO adoption_application (
+    animal_id, user_id, applicant_name, age, job, income, address, phone, wechat, housing, experience, family_members, reason, status, review_note
+) VALUES
+(1, 2, '张三', 28, '产品经理', 'LEVEL3', '深圳市南山区xx路', '13800138000', 'zhangsan01', 'OWN', 'HAD', '夫妻二人', '希望为流浪猫提供长期稳定家庭。', 0, NULL),
+(2, 3, '李四', 31, '设计师', 'LEVEL2', '深圳市福田区xx小区', '13900139000', 'lisi_pet', 'RENT', 'HAVE', '三口之家', '已有养宠经验，愿意接受回访。', 1, '资料完整，审核通过');

@@ -1,0 +1,54 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760">
+  <defs>
+    <style>
+      .title{font:700 28px 'Microsoft YaHei'; fill:#2d3748}
+      .root{fill:#fef3c7;stroke:#d97706;stroke-width:2.5;rx:24;ry:24}
+      .branch{fill:#eff6ff;stroke:#2563eb;stroke-width:2;rx:16;ry:16}
+      .leaf{fill:#f8fafc;stroke:#64748b;stroke-width:1.6;rx:12;ry:12}
+      .line{stroke:#94a3b8;stroke-width:2.4}
+      .t1{font:24px 'Microsoft YaHei'; fill:#111827}
+      .t2{font:21px 'Microsoft YaHei'; fill:#111827}
+      .t3{font:18px 'Microsoft YaHei'; fill:#334155}
+    </style>
+  </defs>
+  <text x="600" y="50" text-anchor="middle" class="title">系统功能结构图</text>
+  <rect x="420" y="90" width="360" height="70" class="root"/>
+  <text x="600" y="134" text-anchor="middle" class="t1">流浪动物救助与云领养管理平台</text>
+
+  <line x1="600" y1="160" x2="170" y2="250" class="line"/>
+  <line x1="600" y1="160" x2="390" y2="250" class="line"/>
+  <line x1="600" y1="160" x2="600" y2="250" class="line"/>
+  <line x1="600" y1="160" x2="810" y2="250" class="line"/>
+  <line x1="600" y1="160" x2="1030" y2="250" class="line"/>
+
+  <rect x="70" y="250" width="200" height="54" class="branch"/><text x="170" y="284" text-anchor="middle" class="t2">用户认证模块</text>
+  <rect x="290" y="250" width="200" height="54" class="branch"/><text x="390" y="284" text-anchor="middle" class="t2">前台服务模块</text>
+  <rect x="500" y="250" width="200" height="54" class="branch"/><text x="600" y="284" text-anchor="middle" class="t2">业务申请模块</text>
+  <rect x="710" y="250" width="200" height="54" class="branch"/><text x="810" y="284" text-anchor="middle" class="t2">社区互动模块</text>
+  <rect x="930" y="250" width="200" height="54" class="branch"/><text x="1030" y="284" text-anchor="middle" class="t2">后台运营模块</text>
+
+  <rect x="55" y="350" width="70" height="42" class="leaf"/><text x="90" y="377" text-anchor="middle" class="t3">注册</text>
+  <rect x="132" y="350" width="70" height="42" class="leaf"/><text x="167" y="377" text-anchor="middle" class="t3">登录</text>
+  <rect x="209" y="350" width="70" height="42" class="leaf"/><text x="244" y="377" text-anchor="middle" class="t3">权限</text>
+
+  <rect x="275" y="350" width="90" height="42" class="leaf"/><text x="320" y="377" text-anchor="middle" class="t3">首页概览</text>
+  <rect x="372" y="350" width="90" height="42" class="leaf"/><text x="417" y="377" text-anchor="middle" class="t3">宠物档案</text>
+  <rect x="469" y="350" width="90" height="42" class="leaf"/><text x="514" y="377" text-anchor="middle" class="t3">News资讯</text>
+  <rect x="324" y="404" width="90" height="42" class="leaf"/><text x="369" y="431" text-anchor="middle" class="t3">科普知识</text>
+  <rect x="421" y="404" width="90" height="42" class="leaf"/><text x="466" y="431" text-anchor="middle" class="t3">透明公示</text>
+
+  <rect x="485" y="350" width="90" height="42" class="leaf"/><text x="530" y="377" text-anchor="middle" class="t3">领养须知</text>
+  <rect x="582" y="350" width="90" height="42" class="leaf"/><text x="627" y="377" text-anchor="middle" class="t3">领养申请</text>
+  <rect x="534" y="404" width="90" height="42" class="leaf"/><text x="579" y="431" text-anchor="middle" class="t3">物资认领</text>
+  <rect x="631" y="404" width="90" height="42" class="leaf"/><text x="676" y="431" text-anchor="middle" class="t3">线索上报</text>
+
+  <rect x="695" y="350" width="90" height="42" class="leaf"/><text x="740" y="377" text-anchor="middle" class="t3">发帖</text>
+  <rect x="792" y="350" width="90" height="42" class="leaf"/><text x="837" y="377" text-anchor="middle" class="t3">图片上传</text>
+  <rect x="744" y="404" width="90" height="42" class="leaf"/><text x="789" y="431" text-anchor="middle" class="t3">地图定位</text>
+  <rect x="841" y="404" width="90" height="42" class="leaf"/><text x="886" y="431" text-anchor="middle" class="t3">评论回复</text>
+
+  <rect x="915" y="350" width="110" height="42" class="leaf"/><text x="970" y="377" text-anchor="middle" class="t3">仪表盘</text>
+  <rect x="1032" y="350" width="110" height="42" class="leaf"/><text x="1087" y="377" text-anchor="middle" class="t3">宠物管理</text>
+  <rect x="915" y="404" width="110" height="42" class="leaf"/><text x="970" y="431" text-anchor="middle" class="t3">审核管理</text>
+  <rect x="1032" y="404" width="110" height="42" class="leaf"/><text x="1087" y="431" text-anchor="middle" class="t3">内容运营</text>
+</svg>

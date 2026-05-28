@@ -1,0 +1,279 @@
+import * as fs from 'fs';
+
+// Build the complete chapter 5 data as JSON
+const blocks = [
+  // Introduction
+  {type: "h1", text: "第五章 系统详细设计与实现"},
+  {type: "p", text: "在第四章系统概要设计的基础上，本章将重点展开系统各个功能模块的详细设计与具体实现。首先，系统采用 B/S 架构，前端部分使用 Vue 框架进行开发，实现了良好的用户交互体验。后端部分则基于 SpringBoot 框架进行搭建，结合 MyBatis-Plus 持久层框架与 MySQL 数据库，完成了流浪动物救助管理平台的核心功能，包括用户认证与权限管理、动物档案管理、领养申请管理、社区互动、捐赠物资管理、内容管理以及数据看板等。通过前后端分离的设计，系统的扩展性和维护性得到了显著提升。"},
+
+  // ===== 5.1 =====
+  {type: "h2", text: "5.1 基于 Session 的用户认证与权限管理模块设计与实现"},
+  {type: "p", text: "用户认证与权限管理模块由用户注册登录模块和权限拦截模块组成。本小节将分别对这两个模块的设计思路、功能实现及其在系统中的应用进行详细阐述。首先，用户注册登录模块负责处理用户的注册、登录、个人信息管理及密码修改等功能，确保系统用户的身份合法性与数据安全性。其次，权限拦截模块通过自定义拦截器对请求进行统一的身份认证与角色鉴权，确保不同角色的用户只能访问其权限范围内的资源。通过这两个模块的有效配合，系统能够实现精细化的权限控制，保障数据安全与隐私保护。"},
+  {type: "p", text: "在本系统中，用户权限控制是通过基于 HttpSession 的会话管理以及自定义的 SessionAuthInterceptor 拦截器来实现的。与传统的安全框架（如 Apache Shiro、Spring Security）相比，基于 Session 的轻量级认证方案在中小型系统中具有配置简单、易于理解和维护的优势。用户在登录成功后，系统将用户信息（不含密码等敏感字段）存入服务端 Session，后续请求通过拦截器校验 Session 中是否存在有效的登录用户信息来完成身份认证。对于管理后台相关的请求，拦截器会进一步校验用户角色是否为管理员，从而实现基于角色的访问控制（RBAC）。"},
+
+  // 5.1.1
+  {type: "h3", text: "5.1.1 用户注册与登录模块设计与实现"},
+  {type: "p", text: "本系统是面向公众开放的流浪动物救助管理平台，因此提供开放的用户注册接口。普通用户可以通过注册功能创建个人账号，注册成功后默认获得普通用户角色（USER）。管理员账号则由系统初始化时直接写入数据库，不对外提供管理员注册通道。系统内的用户被划分为两个角色：管理员（ADMIN）和普通用户（USER）。管理员是系统中权限最高的角色，拥有所有模块的管理权限，包括动物档案管理、领养审批、内容管理等。普通用户则可以使用前台浏览、领养申请、社区发帖、物资认领等面向公众的功能。系统设计的用户角色及其对应的权限配置详见表 5-1。"},
+
+  {type: "caption", text: "表 5-1 用户角色及其对应权限"},
+  {type: "fullTable", headers: ["用户角色", "用户权限"],
+    rows: [
+      ["管理员（ADMIN）", "1. 拥有所有系统模块的操作权限。\n2. 创建及管理所有动物档案、资讯、内容。\n3. 审核领养申请与物资认领。\n4. 管理社区帖子与评论。"],
+      ["普通用户（USER）", "1. 浏览待领养动物与资讯内容。\n2. 提交领养申请。\n3. 参与社区发帖与评论互动。\n4. 查看捐赠公示与提交物资认领。\n5. 管理个人账号信息。"]
+    ]},
+  {type: "spacer"},
+
+  {type: "p", text: "根据用户模块的设计与需求分析，该模块需要具备注册、登录、个人信息管理以及密码修改的功能。基于这些功能需求，本系统设计并实现了以下 RESTful API 接口，为系统用户提供了相应的操作方法。用户登录接口详细信息见表 5-2。"},
+
+  {type: "caption", text: "表 5-2 用户登录接口"},
+  {type: "infoTable", rows: [
+    ["接口名称", "用户登录"],
+    ["接口 URL", "/api/user/login"],
+    ["请求方式", "POST"],
+    ["请求参数及主要字段", "username（用户名），String 类型\npassword（密码），String 类型"],
+    ["返回参数及主要字段", "code（响应代码），整数类型\nmsg（返回信息），String 类型\ndata（用户信息），User 类型，包含 id、username、nickname、email、role、avatar 等字段"]
+  ]},
+
+  {type: "p", text: "用户登录接口的主要参数包括用户名 username 和密码 password。接口的主要实现流程如下：首先，在 Controller 层接收前端传入的 JSON 格式的登录请求体，将其反序列化为 User 对象。随后将请求参数传递给 Service 层进行业务处理。在 Service 层中，系统使用 MyBatis-Plus 提供的 LambdaQueryWrapper 构造查询条件，同时匹配用户名和密码字段，查询数据库中是否存在对应的用户记录。如果查询结果为空，则返回用户名或密码错误的提示信息。如果查询成功，则将用户对象的密码字段置空（通过 sanitizeUser 方法），以确保敏感信息不会通过接口响应泄露。最后，系统通过 HttpSession 的 setAttribute 方法将用户信息存入 Session 中，Key 为 loginUser，供后续请求的权限拦截器进行身份校验。"},
+
+  {type: "caption", text: "表 5-3 用户注册接口"},
+  {type: "infoTable", rows: [
+    ["接口名称", "用户注册"],
+    ["接口 URL", "/api/user/register"],
+    ["请求方式", "POST"],
+    ["请求参数及主要字段", "username（用户名），String 类型\npassword（密码），String 类型\nnickname（昵称），String 类型，可选\nemail（邮箱），String 类型，可选"],
+    ["返回参数及主要字段", "code（响应代码），整数类型\nmsg（返回信息），String 类型\ndata（用户信息），User 类型"]
+  ]},
+
+  {type: "p", text: "用户注册接口的实现流程如下：首先，在 Service 层中对用户名是否已存在进行校验。系统通过 MyBatis-Plus 的 LambdaQueryWrapper 构造等值查询条件，调用 exists 方法检查数据库中是否已存在相同用户名的记录。如果发现用户名已存在，系统将抛出自定义的运行时异常，并提示用户该用户名已被注册。当用户名校验通过后，系统对用户的各项字段进行默认值填充：如果用户未上传头像，系统将调用 DiceBear 在线头像生成 API，以用户名为种子（seed）生成一个独特的卡通头像 URL 作为默认头像；如果用户未填写昵称，系统将默认使用用户名作为昵称。此后，系统将用户角色强制设置为 USER，确保通过公开注册接口创建的用户均为普通用户，防止越权注册管理员账号。最后，系统调用 MyBatis-Plus 的 insert 方法将用户信息持久化到数据库的 sys_user 表中。"},
+
+  {type: "caption", text: "表 5-4 用户个人信息接口"},
+  {type: "infoTable", rows: [
+    ["接口名称", "用户个人信息查询与修改"],
+    ["接口 URL", "/api/user/profile"],
+    ["请求方式", "GET（查询）/ PUT（修改）"],
+    ["请求参数及主要字段（修改）", "nickname（昵称），String 类型\nemail（邮箱），String 类型，可选\navatar（头像 URL），String 类型，可选"],
+    ["返回参数及主要字段", "code（响应代码），整数类型\nmsg（返回信息），String 类型\ndata（用户信息），User 类型"]
+  ]},
+
+  {type: "p", text: "用户个人信息查询接口通过 HttpSession 获取当前登录用户的 ID，然后从数据库中查询最新的用户信息并返回。修改接口的实现流程如下：首先，校验昵称是否为空，若为空则抛出异常提示昵称不能为空。然后更新昵称、邮箱和头像字段，其中邮箱字段允许为空，头像字段在传入值为空时保留原有头像。更新完成后，重新从数据库查询最新用户信息并同步更新 Session 中的用户对象，确保前端与后端状态一致。"},
+
+  {type: "caption", text: "表 5-5 用户密码修改接口"},
+  {type: "infoTable", rows: [
+    ["接口名称", "用户密码修改"],
+    ["接口 URL", "/api/user/password"],
+    ["请求方式", "PUT"],
+    ["请求参数及主要字段", "oldPassword（原密码），String 类型\nnewPassword（新密码），String 类型\nconfirmPassword（确认密码），String 类型"],
+    ["返回参数及主要字段", "code（响应代码），整数类型\nmsg（返回信息），String 类型"]
+  ]},
+
+  {type: "p", text: "密码修改接口的实现流程如下：首先，在 Controller 层校验新密码与确认密码是否一致，如果不一致则返回错误提示两次输入的新密码不一致。然后，在 Service 层中依次进行三项校验：（1）验证原密码是否正确，将用户输入的原密码与数据库中存储的密码进行比对，若不匹配则抛出原密码不正确的异常；（2）校验新密码长度是否不少于 6 位；（3）校验新密码是否与原密码不同，防止用户设置相同密码。所有校验通过后，将新密码更新到数据库。"},
+
+  // 5.1.2
+  {type: "h3", text: "5.1.2 权限拦截模块设计与实现"},
+  {type: "p", text: "权限拦截模块是本系统安全机制的核心组件，通过自定义的 SessionAuthInterceptor 拦截器统一处理所有进入系统的 HTTP 请求的认证与授权。该拦截器实现了 Spring MVC 的 HandlerInterceptor 接口，并在 WebConfig 配置类中注册，拦截路径为 /api/**，即所有的 API 请求都需要经过该拦截器的校验。"},
+  {type: "p", text: "拦截器的核心逻辑在 preHandle 方法中实现。具体实现流程如下："},
+  {type: "p", text: "（1）放行 OPTIONS 请求：由于系统采用前后端分离架构，浏览器在发送跨域请求前会先发送 OPTIONS 预检请求。拦截器对 OPTIONS 请求直接返回 true，放行预检请求，避免跨域请求被拦截。"},
+  {type: "p", text: "（2）权限规则匹配：拦截器根据请求的 URI 和方法（GET/POST/PUT/DELETE）进行细粒度的权限判断。权限规则分为三个层级：公开访问——无需登录即可访问的接口，包括动物列表查询、资讯浏览、知识查看、捐赠公示等只读接口；登录访问——需要用户登录后才能访问的接口，包括领养申请提交、物资认领提交、社区发帖与评论、文件上传、个人信息管理等功能；管理员访问——需要登录且角色为 ADMIN 的接口，包括所有 /api/admin/ 前缀下的后台管理接口，以及对动物信息、社区帖子和评论的非 GET 操作。"},
+  {type: "p", text: "（3）认证与鉴权：如果请求需要登录权限但 Session 中不存在 loginUser 属性，拦截器将返回 HTTP 401 状态码和请先登录的错误信息。如果请求需要管理员权限但当前用户角色不是 ADMIN，拦截器将返回 HTTP 403 状态码和无管理员权限的错误信息。错误响应采用 UTF-8 编码的 JSON 格式，使用系统统一的 Result.fail 方法封装返回。"},
+  {type: "p", text: "这种基于 URL 模式匹配和 HTTP 方法组合的权限控制方案，相比基于注解的权限控制方式，具有规则集中管理、易于维护的优势。所有的权限规则都在拦截器中明确定义，项目维护者可以快速了解系统的安全策略全貌。同时，前端 Vue Router 的 beforeEach 导航守卫也在路由层面进行了权限校验——对于需要登录的页面，未登录用户会被重定向到登录页；对于需要管理员权限的页面，非管理员用户会被重定向到首页——形成了前后端双重权限防护的安全架构。"},
+
+  // ===== 5.2 =====
+  {type: "h2", text: "5.2 动物档案管理模块设计与实现"},
+  {type: "p", text: "动物档案管理模块是本系统的核心业务模块，负责管理被救助流浪动物的基本信息、状态及其活动轨迹。该模块为前台用户提供了浏览待领养动物的功能，用户可以根据动物类别（猫/狗）、性别和体型等条件进行筛选。同时，该模块为后台管理员提供了动物档案的创建、编辑、删除以及状态变更等功能。"},
+
+  {type: "h3", text: "5.2.1 动物档案数据模型设计"},
+  {type: "p", text: "动物档案的核心数据存储在 animal 表中，包含以下主要信息字段：动物编号（animal_no，如 SZ753 格式的唯一业务编号）、名称（name）、类别（category，CAT/DOG）、性别（sex）、体型（body_size，SMALL/MEDIUM/LARGE）、年龄（age）、头像 URL（avatar）、绝育状态（is_sterilized）、活动范围（activity_scope）、领养状态（status，1 表示可领养，0 表示已领养）、描述信息（description）、富文本详情（detail_content）、发现地点（location）以及经纬度坐标（latitude/longitude）。此外，系统还设计了 animal_location 表用于记录动物的历史位置信息，支持后续的热力图或活动轨迹可视化功能。animal_location 表通过 animal_id 外键与 animal 表关联，并设置了 ON DELETE CASCADE 级联删除策略，确保删除动物档案时自动清理关联的位置记录。"},
+  {type: "p", text: "本系统在数据库设计上的一个特色是采用了自动化的数据库迁移方案。系统在启动时通过三个实现了 ApplicationRunner 接口的迁移运行器类，自动检测并补全数据库结构：（1）AnimalSchemaMigrationRunner 负责检测 animal 表中是否存在 location 字段，若不存在则自动添加；（2）UserSchemaMigrationRunner 负责检测 sys_user 表中是否存在 nickname 字段以及 avatar 字段的类型是否为 LONGTEXT，并自动修复；（3）DefaultAvatarSchemaMigrationRunner 负责检测并创建 default_avatar 表，同时预置四款手绘风格的 SVG 卡通动物头像（橘猫、灰白猫、柯基犬、白狗），用户注册时可以选择这些预设头像作为个人资料图片。"},
+
+  {type: "h3", text: "5.2.2 动物档案管理接口设计与实现"},
+  {type: "p", text: "动物档案查询接口为前台用户提供了浏览可领养动物的功能。动物档案查询接口详细信息见表 5-6。"},
+
+  {type: "caption", text: "表 5-6 动物档案查询接口"},
+  {type: "infoTable", rows: [
+    ["接口名称", "动物档案列表查询"],
+    ["接口 URL", "/api/animals"],
+    ["请求方式", "GET"],
+    ["请求参数及主要字段", "category（类别，CAT/DOG/ALL），String 类型，可选\nsex（性别，MALE/FEMALE/ALL），String 类型，可选\nbodySize（体型，SMALL/MEDIUM/LARGE/ALL），String 类型，可选"],
+    ["返回参数及主要字段", "code（响应代码），整数类型\nmsg（返回信息），String 类型\ndata（动物列表），List<Animal>类型，包含动物的所有基本信息字段及位置历史数据（locations）"]
+  ]},
+
+  {type: "p", text: "动物档案查询接口的实现流程如下：在 Service 层中，系统使用 MyBatis-Plus 的 LambdaQueryWrapper 动态构建查询条件。当请求参数中传入类别、性别或体型参数且不为 ALL 时，系统添加对应的等值查询条件；如果参数为空或为 ALL，则不添加对应条件，实现灵活的多条件组合筛选。查询结果按创建时间降序排列。此外，当查询单个动物详情时（通过 GET /api/animals/{id} 或 GET /api/animals/no/{animalNo} 接口），系统会通过 getAnimalWithLocations 方法同步加载该动物的位置历史记录，将 animal_location 表中的关联数据按照记录时间升序排列后填充到 Animal 对象的 locations 属性中，为前端的热力图或活动轨迹展示提供完整数据。"},
+
+  {type: "caption", text: "表 5-7 动物档案管理后台接口"},
+  {type: "infoTable", rows: [
+    ["接口名称", "动物档案管理（创建/修改/删除/状态变更/后台分页）"],
+    ["接口 URL", "/api/animals（POST 创建）\n/api/animals/{id}（PUT 修改 / DELETE 删除）\n/api/animals/{id}/status（PUT 状态变更）\n/api/animals/admin（GET 后台分页查询）"],
+    ["请求方式", "POST / GET / PUT / DELETE"],
+    ["请求参数及主要字段（创建/修改）", "animalNo（动物编号），String 类型，可选\nname（名称），String 类型\ncategory（类别），String 类型\nsex（性别），String 类型\nbodySize（体型），String 类型\nage（年龄），Integer 类型\navatar（头像 URL），String 类型\nisSterilized（绝育），Boolean 类型\nactivityScope（活动范围），String 类型\nstatus（状态），Integer 类型\ndescription（描述），String 类型\ndetailContent（详情），String 类型\nlocation（地点），String 类型\nlatitude（纬度），BigDecimal 类型\nlongitude（经度），BigDecimal 类型"],
+    ["返回参数及主要字段", "code（响应代码），整数类型\nmsg（返回信息），String 类型\ndata，Boolean 类型（增删改）或分页数据（后台查询）"]
+  ]},
+
+  {type: "p", text: "动物档案创建接口的实现流程如下：首先，在 Service 层中校验动物编号（animalNo）是否为空，如果为空则使用 Java 的 UUID.randomUUID() 方法自动生成一个全局唯一的业务编号，确保每只动物具有独立的标识。然后，调用 MyBatis-Plus 的 save 方法将动物信息持久化到数据库中。在保存成功后，系统检查动物对象中是否包含经纬度坐标信息，如果包含则自动创建一条初始位置记录插入到 animal_location 表中，记录当前时间为观测时间。该创建方法使用了 @Transactional 注解进行事务管理，确保动物信息与位置记录的保存作为一个原子操作执行，防止因异常导致的数据不一致问题。动物档案修改接口直接调用 MyBatis-Plus 的 updateById 方法进行更新。动物档案删除接口调用 removeById 方法，由于 animal_location 表设置了级联删除，相关的历史位置记录会被自动清理。"},
+  {type: "p", text: "动物档案状态变更接口专门用于切换动物的领养状态（可领养/已领养），管理员在前端点击操作按钮后，系统接收到状态参数并更新对应动物的 status 字段。这种将状态变更独立为单独接口的设计，使得操作意图更加明确，便于后续的日志审计和数据分析。"},
+  {type: "p", text: "动物档案后台分页查询接口（/api/animals/admin）为管理员提供了带关键词搜索和条件筛选的分页列表。该接口支持按 page 和 pageSize 进行分页控制，按 keyword 在动物名称、编号、活动范围和地点字段中进行模糊搜索（使用 LIKE 查询），同时支持按类别和状态进行精准筛选。查询结果按更新时间倒序排列，返回包含 records（当前页记录列表）和 total（总记录数）的分页数据结构。"},
+
+  // ===== 5.3 =====
+  {type: "h2", text: "5.3 领养申请管理模块设计与实现"},
+  {type: "p", text: "领养申请管理模块是连接公众用户与救助动物的关键业务模块。通过该模块，有意领养的用户可以在线提交领养申请，填写个人基本信息、居住条件、养宠经验等相关资料。管理员在后台对申请进行审核，决定是否批准该领养申请。本小节将分别对前台申请提交和后台审核管理两个子模块的设计与实现进行详细阐述。"},
+
+  {type: "h3", text: "5.3.1 领养申请数据模型设计"},
+  {type: "p", text: "领养申请的核心数据存储在 adoption_application 表中，包含以下主要信息字段：关联的动物 ID（animal_id）、申请人用户 ID（user_id）、申请人姓名（applicant_name）、年龄（age）、职业（job）、收入水平（income）、居住地址（address）、联系电话（phone）、微信号（wechat）、住房类型（housing，OWN 自有/RENT 租赁）、养宠经验（experience，HAD 曾养过/HAVE 正在养/NONE 无经验）、家庭成员（family_members）、申请理由（reason）、审核状态（status，0 待审核/1 已通过/2 已拒绝）以及审核备注（review_note）。该表同时关联了动物表与用户表，申请人用户 ID 用于追溯申请者的身份信息，动物 ID 用于定位被申请的救助动物。"},
+
+  {type: "h3", text: "5.3.2 领养申请接口设计与实现"},
+  {type: "p", text: "领养申请提交接口为登录用户提供了在线提交领养申请的功能。领养申请提交接口详细信息见表 5-8。"},
+
+  {type: "caption", text: "表 5-8 领养申请提交接口"},
+  {type: "infoTable", rows: [
+    ["接口名称", "领养申请提交"],
+    ["接口 URL", "/api/adoption-applications"],
+    ["请求方式", "POST"],
+    ["请求参数及主要字段", "animalId（动物 ID），Long 类型\napplicantName（申请人姓名），String 类型\nage（年龄），Integer 类型\njob（职业），String 类型\nincome（收入水平），String 类型\naddress（地址），String 类型\nphone（电话），String 类型\nwechat（微信），String 类型\nhousing（住房类型），String 类型\nexperience（养宠经验），String 类型\nfamilyMembers（家庭成员），String 类型\nreason（申请理由），String 类型"],
+    ["返回参数及主要字段", "code（响应代码），整数类型\nmsg（返回信息），String 类型\ndata（操作结果），Boolean 类型"]
+  ]},
+
+  {type: "p", text: "领养申请提交接口的实现流程如下：首先，在 Controller 层通过 HttpSession 获取当前登录用户的信息，将用户 ID 自动填充到领养申请对象的 userId 字段中，无需前端显式传递。然后，将申请的初始状态设置为 0（待审核）。这种设计确保了申请人身份的真实性和可追溯性，避免了冒名提交的风险。最后，调用 MyBatis-Plus 的 save 方法将申请信息持久化到数据库中。"},
+
+  {type: "caption", text: "表 5-9 领养审批接口"},
+  {type: "infoTable", rows: [
+    ["接口名称", "领养审批"],
+    ["接口 URL", "/api/admin/adoption-applications/{id}/status"],
+    ["请求方式", "PUT"],
+    ["请求参数及主要字段", "status（审核结果），Integer 类型，1 为通过，2 为拒绝\nreviewNote（审核备注），String 类型，可选"],
+    ["返回参数及主要字段", "code（响应代码），整数类型\nmsg（返回信息），String 类型\ndata（操作结果），Boolean 类型"]
+  ]},
+
+  {type: "p", text: "领养审批接口的实现流程如下：在 Controller 层，系统从请求路径中提取申请 ID，从请求体中解析审核状态和审核备注。由于请求体中的状态值可能为 Integer 或 String 类型，系统进行了兼容性处理——如果状态值为 Number 类型则直接转换为 int，否则通过 Integer.parseInt 方法进行字符串解析。审核完成后，系统更新对应申请记录的 status 和 reviewNote 字段。管理员后台领养申请列表接口支持按审核状态和关键词（匹配申请人姓名、电话、地址）进行筛选，并按创建时间倒序分页展示，便于管理员高效处理待审核申请。管理员还可通过 DELETE 接口删除无效或测试申请记录。"},
+
+  // ===== 5.4 =====
+  {type: "h2", text: "5.4 社区互动模块设计与实现"},
+  {type: "p", text: "社区互动模块为系统用户提供了一个交流分享的平台。用户可以在社区中发布帖子，分享救助故事、领养心得或求助信息；也可以浏览他人发布的帖子并进行评论互动。管理员可以对帖子及评论进行内容审核，对违规内容执行隐藏或删除操作。本小节将分别对帖子管理和评论管理两个子模块的设计与实现进行详细阐述。"},
+
+  {type: "h3", text: "5.4.1 社区帖子管理模块设计与实现"},
+  {type: "p", text: "社区帖子数据存储在 post 表中，包含帖子标题（title）、正文内容（content）、图片列表（images，JSON 格式存储）、发布地点（location）、经纬度坐标（latitude/longitude）、发布用户 ID（user_id）以及显示状态（status，0 隐藏/1 正常）。帖子查询时通过 SQL JOIN 关联 sys_user 表获取发布用户的用户名、昵称和头像信息。帖子管理相关接口详细信息见表 5-10。"},
+
+  {type: "caption", text: "表 5-10 社区帖子管理接口"},
+  {type: "infoTable", rows: [
+    ["接口名称", "社区帖子查询与发布"],
+    ["接口 URL", "/api/community/posts（GET 查询 / POST 发布）\n/api/admin/posts（GET 管理员查询全部）\n/api/community/posts/{id}（DELETE 删除）\n/api/community/posts/{id}/status（PUT 状态变更）"],
+    ["请求方式", "GET / POST / DELETE / PUT"],
+    ["请求参数及主要字段（发布）", "title（标题），String 类型\ncontent（正文），String 类型\nimages（图片列表），String 类型（JSON）\nlocation（地点），String 类型\nlatitude（纬度），BigDecimal 类型\nlongitude（经度），BigDecimal 类型"],
+    ["返回参数及主要字段", "code（响应代码），整数类型\nmsg（返回信息），String 类型\ndata（帖子列表），List<Post>类型，每个帖子包含发布用户信息（username、nickname、avatar）及评论列表"]
+  ]},
+
+  {type: "p", text: "帖子查询接口的实现流程如下：前台用户调用 GET /api/community/posts 接口时，系统通过 PostMapper 中自定义的 selectListWithUser 方法执行 SQL JOIN 查询，关联 post 表与 sys_user 表，并在查询条件中过滤 status=1（仅显示正常状态的帖子）。查询结果返回后，系统遍历每个帖子，通过 CommentMapper 的自定义查询方法加载该帖子下的评论列表（同样仅显示 status=1 的评论），并填充到 Post 对象的 comments 属性中。管理员调用 /api/admin/posts 接口时，系统使用 selectAdminListWithUser 方法，不过滤 status 字段，展示包括已隐藏帖子在内的全部内容，便于管理员进行全面的内容管理。帖子发布接口通过 HttpSession 获取当前登录用户的 ID 自动填充到 userId 字段，并将 status 默认设置为 1（正常显示）。帖子的删除和状态变更操作仅限管理员执行，管理员可将违规帖子设为隐藏（status=0）或直接删除。"},
+
+  {type: "h3", text: "5.4.2 社区评论管理模块设计与实现"},
+  {type: "p", text: "评论数据存储在 comment 表中，包含关联的帖子 ID（post_id，设置了 ON DELETE CASCADE 外键约束，删除帖子时自动级联删除评论）、评论用户 ID（user_id）、评论内容（content）、评论图片（image）、父评论 ID（parent_id，支持评论回复的多级嵌套结构）以及显示状态（status）。评论查询时同样通过 SQL JOIN 关联 sys_user 表获取评论用户的用户名、昵称和头像信息。评论管理相关接口详细信息见表 5-11。"},
+
+  {type: "caption", text: "表 5-11 社区评论管理接口"},
+  {type: "infoTable", rows: [
+    ["接口名称", "社区评论查询与发布"],
+    ["接口 URL", "/api/community/posts/{postId}/comments（GET 查询）\n/api/community/comments（POST 发布）\n/api/community/comments/{id}（DELETE 删除 / PUT 状态变更）"],
+    ["请求方式", "GET / POST / DELETE / PUT"],
+    ["请求参数及主要字段（发布）", "postId（帖子 ID），Long 类型\ncontent（评论内容），String 类型\nimage（图片 URL），String 类型，可选\nparentId（父评论 ID），Long 类型，可选"],
+    ["返回参数及主要字段", "code（响应代码），整数类型\nmsg（返回信息），String 类型\ndata（评论列表），List<Comment>类型，每个评论包含用户信息"]
+  ]},
+
+  {type: "p", text: "评论发布接口通过 HttpSession 获取当前登录用户的 ID 自动填充，默认 status 设置为 1。评论查询接口根据帖子 ID 获取该帖子下的所有可见评论。评论的删除和状态变更操作仅限管理员执行，用于内容审核和违规评论处理。评论表通过 post_id 外键与帖子表关联，设置了 ON DELETE CASCADE 级联删除策略，当管理员删除帖子时，该帖子下的所有评论将自动被清理，避免了数据残留问题。此外，评论表设计了 parent_id 字段用于支持评论的多级回复，为后续扩展社区互动功能（如回复通知、评论嵌套展示）预留了数据结构基础。"},
+
+  // ===== 5.5 =====
+  {type: "h2", text: "5.5 捐赠与物资管理模块设计与实现"},
+  {type: "p", text: "捐赠与物资管理模块旨在提升救助组织的透明度和公信力，同时为爱心人士提供便捷的物资捐赠和认领渠道。该模块包含四个子模块：捐赠公示模块、急需物资展示模块、物资认领模块以及后台内容排序管理机制。"},
+
+  {type: "h3", text: "5.5.1 捐赠公示模块"},
+  {type: "p", text: "捐赠公示模块通过 donation_record 表存储每一笔捐赠的公示记录，包含展示日期（date）、捐赠人（donor，以脱敏形式展示，如张**）和捐赠物品（item）。前台通过 GET /api/donation/records 接口按 sort_order 升序排列返回所有公示记录，前端页面将后端返回的数据与本地硬编码的补充数据（donationPublicity.ts，包含 44 条历史捐赠记录）合并展示，以提供更丰富的公示内容。这种后端数据与前端补充数据相结合的设计，在保证核心数据可管理的同时，减轻了管理员批量导入历史数据的工作量。"},
+
+  {type: "h3", text: "5.5.2 急需物资与物资认领模块"},
+  {type: "p", text: "急需物资模块通过 urgent_need 表展示当前救助站急需的物资清单，包含物资名称（name）、需求缺口（gap）和更新时间（updated_at）。前台用户通过 GET /api/donation/urgent 接口获取急需物资列表，列表按 sort_order 升序排列。"},
+  {type: "p", text: "物资认领模块允许登录用户针对急需物资提交认领申请。认领申请数据存储在 donation_claim 表中，包含认领物资名称（need_name）、需求缺口（need_gap）、认领数量（quantity）、联系人姓名（contact_name）、联系电话（phone）、微信号（wechat）、预计领取日期（pickup_date）、备注（remark）、审核状态（status，0 待审核/1 已通过/2 已拒绝）以及审核备注（review_note）。物资认领接口详细信息见表 5-12。"},
+
+  {type: "caption", text: "表 5-12 物资认领管理接口"},
+  {type: "infoTable", rows: [
+    ["接口名称", "物资认领提交与审核"],
+    ["接口 URL", "/api/donation/claims（POST 提交）\n/api/admin/donation-claims（GET 管理员查询）\n/api/admin/donation-claims/{id}/status（PUT 审核）\n/api/admin/donation-claims/{id}（DELETE 删除）"],
+    ["请求方式", "POST / GET / PUT / DELETE"],
+    ["请求参数及主要字段（提交）", "needName（物资名称），String 类型\nneedGap（需求缺口），String 类型\nquantity（认领数量），String 类型\ncontactName（联系人），String 类型\nphone（电话），String 类型\nwechat（微信），String 类型\npickupDate（领取日期），String 类型\nremark（备注），String 类型"],
+    ["返回参数及主要字段", "code（响应代码），整数类型\nmsg（返回信息），String 类型"]
+  ]},
+
+  {type: "p", text: "物资认领提交接口将申请状态默认设置为 0（待审核）。管理员后台通过分页查询接口查看所有认领申请，支持按状态和关键词（匹配物资名称、联系人、电话）进行筛选。审核接口的处理逻辑与领养审批模块类似，管理员可批准或拒绝认领申请并填写审核备注。"},
+
+  {type: "h3", text: "5.5.3 后台内容排序管理机制"},
+  {type: "p", text: "在后台内容管理中，当管理员创建新的捐赠记录、急需物资、每周更新或财务公示记录时，系统采用统一的排序字段上移策略来确保最新创建的内容排在最前面。以捐赠记录创建为例，具体实现流程如下：首先，在 Service 层方法上添加 @Transactional 注解确保事务一致性。然后，系统查询数据库中所有现有记录的 sort_order 值，遍历每条记录将其 sort_order 值加 1（即所有旧记录顺位下移一位）。最后，将新创建的记录的 sort_order 设置为 1，使其排序最前。这种设计避免了手动调整排序的繁琐操作，实现了新增内容的自动置顶。批量更新操作通过 MyBatis-Plus 的 updateBatchById 方法高效完成。所有移位操作方法（shiftWeeklyUpdatesSortOrder、shiftTransparencySortOrder、shiftUrgentNeedsSortOrder、shiftDonationRecordsSortOrder）均采用相同的实现模式，保证了代码的一致性和可维护性。"},
+
+  // ===== 5.6 =====
+  {type: "h2", text: "5.6 内容管理模块设计与实现"},
+  {type: "p", text: "内容管理模块是系统运营的支撑模块，为管理员提供了对网站各类展示内容的统一管理能力。该模块涵盖资讯管理、宠物养护知识库管理、每周救助动态管理、财务公示管理以及看板指标配置等功能。所有后台内容管理接口均统一在 AdminContentController 中实现，前缀为 /api/admin/content。"},
+
+  {type: "h3", text: "5.6.1 资讯管理模块"},
+  {type: "p", text: "资讯管理模块负责网站新闻和活动资讯的发布与管理。资讯数据存储在 news 表中，包含标题（title）、摘要（summary）、正文内容（content，支持 HTML 富文本格式）、封面图片（cover_image）和发布时间（publish_time）。前台用户通过 GET /api/news 接口按发布时间倒序获取资讯列表。管理员通过后台 POST、PUT、DELETE 接口进行资讯的创建、编辑和删除操作。资讯管理接口详细信息见表 5-13。"},
+
+  {type: "caption", text: "表 5-13 资讯管理接口"},
+  {type: "infoTable", rows: [
+    ["接口名称", "资讯管理"],
+    ["接口 URL", "/api/news（GET 查询 / POST 创建）\n/api/news/{id}（PUT 修改 / DELETE 删除）"],
+    ["请求方式", "GET / POST / PUT / DELETE"],
+    ["请求参数及主要字段", "title（标题），String 类型\nsummary（摘要），String 类型\ncontent（正文），String 类型（HTML）\ncoverImage（封面图 URL），String 类型\npublishTime（发布时间），DateTime 类型"],
+    ["返回参数及主要字段", "code（响应代码），整数类型\nmsg（返回信息），String 类型"]
+  ]},
+
+  {type: "p", text: "本系统在资讯内容中设计了一种特殊的跳转格式：当资讯的 content 字段以 PET: 为前缀时（如 PET:SZ753），表明该条资讯是一条动物档案推荐。前台首页在渲染资讯卡片时，检测到该前缀后会提取后续的动物编号，点击卡片时直接跳转到对应动物的详情页面（/pet/SZ753），而非资讯详情页。这种设计将资讯推送与动物领养推广有机结合，提升了待领养动物的曝光度，是系统内容运营的一种创新实践。"},
+
+  {type: "h3", text: "5.6.2 宠物养护知识库与运营内容管理模块"},
+  {type: "p", text: "宠物养护知识库模块通过 knowledge 表存储与救助组织相关的实用信息，如工作时间、联系方式、救助站地址、QQ 群号等。knowledge 表结构简洁，包含标题（title）、内容（content）和排序字段（sort_order）。前台用户通过 GET /api/knowledge 接口按 sort_order 升序获取所有知识条目，通过 GET /api/knowledge/{id} 接口查看单条知识的详细内容。该模块为纯展示型模块，数据由管理员在数据库初始化时通过 init.sql 脚本预设。"},
+  {type: "p", text: "后台运营内容管理模块（AdminContentController）为管理员提供了对四大类运营内容的完整 CRUD 操作：每周救助动态（weekly_updates）、财务公示记录（transparency_records）、急需物资（urgent_needs）和捐赠公示记录（donation_records）。每种内容类型均提供了 GET（列表查询）、POST（创建）、PUT（修改）和 DELETE（删除）四个标准接口。创建操作均采用前文所述的排序字段上移策略，确保新内容自动置顶。在财务公示记录的创建和修改接口中，系统还实现了货币金额输入的归一化处理（normalizeCurrencyInput 方法），通过正则表达式剔除用户输入中的非数字字符（保留小数点），确保数据库中存储的金额数据格式统一规范。"},
+
+  {type: "h3", text: "5.6.3 看板指标与系统配置模块"},
+  {type: "p", text: "系统提供了一个灵活的系统配置（system_config）表，采用键值对（key-value）的形式存储可动态调整的系统参数。核心配置项包括 dashboard.totalRescueCount（累计救助数量展示值）和 dashboard.adoptionSuccessCount（成功领养数量展示值）。管理员可以通过后台接口 GET /api/admin/content/dashboard-metrics 查看当前配置值，通过 PUT 接口修改这些指标。配置的更新采用了存在则更新，不存在则插入的 upsert 策略：系统先通过 config_key 查询配置项是否存在，若存在则更新 config_value 和 description 字段，若不存在则新建一条配置记录。这种设计使得系统运营指标可以灵活调整，无需修改代码或重启服务。"},
+
+  // ===== 5.7 =====
+  {type: "h2", text: "5.7 数据看板模块设计与实现"},
+  {type: "p", text: "数据看板模块为管理员和公众用户提供了系统运行状态的可视化数据概览。该模块通过聚合查询多个业务表的数据，生成多维度的统计数据，帮助管理员掌握救助工作的整体情况，同时也向公众展示组织的运营成果。"},
+
+  {type: "h3", text: "5.7.1 首页汇总看板"},
+  {type: "p", text: "首页汇总看板接口（GET /api/dashboard/summary）为网站首页提供关键运营指标的聚合数据。该接口的实现流程如下：首先，系统统计当前状态为可领养（status=1）的动物数量作为待领养动物数；统计 animal 表中的总记录数作为动物档案总数。然后，系统从 transparency_record 表中查询 sort_order 最大的记录（即最新的一条财务公示），提取其 expense 字段作为当月运营支出的展示值。最后，从 system_config 表中读取配置的累计救助总数（dashboard.totalRescueCount，默认值 2680）和成功领养总数（dashboard.adoptionSuccessCount，默认值 1930），结合动态统计数据组成包含 totalRescueCount、adoptionSuccessCount、activeAnimals、totalProfiles 和 monthlyPublicBudget 五个指标的完整汇总数据返回。这种静态配置与动态统计相结合的混合口径，既允许管理员灵活调整历史累计指标，又保证了实时数据的准确性。"},
+
+  {type: "h3", text: "5.7.2 管理后台图表看板"},
+  {type: "p", text: "管理后台图表看板接口（GET /api/dashboard/charts）为管理员提供五类统计维度的图表数据："},
+  {type: "p", text: "（1）动物类别统计：分别统计猫类别（CAT）和狗类别（DOG）的动物数量，以饼图或柱状图展示救助动物的种类分布。"},
+  {type: "p", text: "（2）动物状态统计：统计当前可领养（status=1）和已领养（status=0）的动物数量，反映救助站的整体领养进度。"},
+  {type: "p", text: "（3）领养申请状态统计：分别统计待审核（status=0）、已通过（status=1）和已拒绝（status=2）的领养申请数量，帮助管理员掌握领养审批工作负载。"},
+  {type: "p", text: "（4）物资认领状态统计：分别统计待审核、已通过和已拒绝的认领申请数量，监控物资认领的处理效率。"},
+  {type: "p", text: "（5）平台总览统计：聚合资讯总数、每周更新条数、领养申请总量和物资认领总量等全局指标，为管理员提供一站式的运营数据视图。"},
+  {type: "p", text: "图表看板接口中所有的统计查询均使用 MyBatis-Plus 的 LambdaQueryWrapper 构造等值查询条件，调用 count 方法进行计数。这种基于 MyBatis-Plus 条件构造器的统计方式避免了编写原生 SQL，查询效率高且代码可读性强，充分利用了 MyBatis-Plus 框架的便捷特性。"},
+
+  // ===== 5.8 =====
+  {type: "h2", text: "5.8 文件上传与统一响应机制"},
+  {type: "p", text: "本节将介绍系统的文件上传模块与统一响应格式的设计与实现，这两个模块构成了系统的基础技术支撑层。"},
+
+  {type: "h3", text: "5.8.1 文件上传模块"},
+  {type: "p", text: "文件上传模块为系统提供了统一的文件上传功能，支持用户上传头像图片、帖子图片等。文件上传接口（POST /api/file/upload）的详细信息见表 5-14。"},
+
+  {type: "caption", text: "表 5-14 文件上传接口"},
+  {type: "infoTable", rows: [
+    ["接口名称", "文件上传"],
+    ["接口 URL", "/api/file/upload"],
+    ["请求方式", "POST"],
+    ["请求参数及主要字段", "file（上传文件），MultipartFile 类型"],
+    ["返回参数及主要字段", "code（响应代码），整数类型\nmsg（返回信息），String 类型\ndata（文件访问 URL），String 类型，格式为 /uploads/{uuid}.{ext}"]
+  ]},
+
+  {type: "p", text: "文件上传接口的实现流程如下：首先，校验上传文件是否为空，若为空则返回文件为空的错误信息。然后，从原始文件名中提取文件扩展名（如 .jpg、.png），使用 Java 的 UUID.randomUUID() 方法生成一个全局唯一的文件名，将扩展名追加到 UUID 后组成新的文件名。这种命名策略有效避免了文件名冲突问题，同时不暴露用户的原始文件信息。接着，系统将上传文件保存到项目运行目录下的 uploads/ 子目录中，如果目录不存在则通过 mkdirs() 方法自动创建。最后，返回格式为 /uploads/{uuid}.{ext} 的文件访问 URL。"},
+  {type: "p", text: "文件的上传涉及持久化存储和 HTTP 访问两个层面。在存储层面，文件被写入到服务器本地磁盘的 uploads 目录中。在访问层面，系统通过 Spring MVC 的 ResourceHandler 机制，在 WebConfig 配置类中将 URL 路径 /uploads/** 映射到文件系统的 uploads 目录，使用 file: 协议前缀指定本地文件系统路径。同时，WebConfig 配置类中还配置了 CORS 跨域策略，通过 addCorsMappings 方法允许来自前端开发服务器（http://localhost:5173）的跨域请求，支持 GET、POST、PUT、DELETE 和 OPTIONS 五种 HTTP 方法，并启用了 allowCredentials 支持，确保携带 Session Cookie 的请求能够正常通过跨域校验。"},
+
+  {type: "h3", text: "5.8.2 统一响应格式与全局异常处理"},
+  {type: "p", text: "本系统在设计时严格遵循统一接口规范，所有 API 接口均使用统一的响应格式 Result<T> 进行封装。Result 类采用 Java 14 引入的 Record 类型定义，利用其简洁的语法和不可变性特性，包含三个核心字段：code（响应代码，整数类型，0 表示成功，-1 表示失败）、message（响应消息，String 类型，成功时为 OK，失败时为具体的错误描述）和 data（泛型数据负载，T 类型，成功时携带业务数据，失败时为 null）。静态工厂方法 Result.ok(data) 和 Result.fail(message) 分别用于快速构建成功和失败的响应对象。Result 类使用了 Jackson 的 @JsonInclude(JsonInclude.Include.NON_NULL) 注解，在 JSON 序列化时自动排除值为 null 的字段，减少响应体积，提升网络传输效率。"},
+  {type: "p", text: "全局异常处理通过 Spring MVC 的 @RestControllerAdvice 机制实现。系统定义了 GlobalExceptionHandler 类，统一捕获 Controller 层抛出的运行时异常（RuntimeException），将其 message 字段提取为错误信息，转换为标准的 Result 错误响应格式返回给前端。这种设计避免了异常的堆栈信息直接暴露给客户端造成的安全隐患，同时也保证了前端能够统一解析所有接口的错误响应，无需针对不同接口编写不同的错误处理逻辑，提升了系统的健壮性和前后端协作效率。"},
+
+  // ===== 5.9 =====
+  {type: "h2", text: "5.9 本章小结"},
+  {type: "p", text: "本章详细阐述了毛茸茸之家流浪动物救助管理平台各个功能模块的详细设计与具体实现。系统采用前后端分离的 B/S 架构，后端基于 SpringBoot 框架与 MyBatis-Plus 持久层框架构建 RESTful API，前端使用 Vue 3 框架结合 TypeScript 和 Element Plus 组件库构建用户界面，数据库采用 MySQL 存储业务数据。"},
+  {type: "p", text: "在安全方面，系统采用基于 HttpSession 的认证机制与自定义 SessionAuthInterceptor 拦截器的授权方案，通过 URL 模式匹配与 HTTP 方法组合的方式实现了灵活的角色权限控制，前端 Vue Router 的导航守卫提供了额外的路由级权限防护，形成了前后端双重安全保障。"},
+  {type: "p", text: "在业务方面，系统围绕动物档案管理、领养申请、社区互动和捐赠物资管理四大核心业务模块，构建了完整的救助管理功能体系。动物档案管理模块支持多条件筛选查询和位置轨迹记录；领养申请模块实现了从提交到审核的完整工作流；社区互动模块提供了帖子和评论的发布与管理功能，并通过 SQL JOIN 查询关联用户信息；捐赠物资模块通过公示、需求和认领三个子模块提升了组织透明度。"},
+  {type: "p", text: "在数据展示与运营方面，通过首页汇总看板和管理后台图表看板，实现了运营数据可视化；通过资讯管理、知识库和运营内容管理模块，实现了网站内容的动态管理和灵活配置。系统还设计了基于 system_config 表的键值对配置机制和排序字段上移策略，为管理员提供了便捷的内容运营工具。"},
+  {type: "p", text: "在系统架构方面，通过统一响应格式 Result、全局异常处理 GlobalExceptionHandler、文件上传与静态资源映射机制，以及自动化的数据库迁移方案，保证了系统的健壮性、可维护性和部署便捷性。前后端分离的架构设计使得系统的扩展性和维护性得到了显著提升，各模块之间的低耦合设计也为后续的功能迭代和业务扩展奠定了良好的基础。"}
+];
+
+fs.writeFileSync('c:/Users/Administrator/Desktop/毕业设计/chapter5_data.json', JSON.stringify({blocks}, null, 2), 'utf-8');
+console.log('Data file written successfully. Blocks:', blocks.length);
