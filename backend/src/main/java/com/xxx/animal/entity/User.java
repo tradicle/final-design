@@ -17,10 +17,12 @@ public class User {
     
     private String password;
     
+    private String nickname;
+
     private String email;
-    
+
     private String role; // ADMIN, USER
-    
+
     private String avatar;
 
     private LocalDateTime createTime;

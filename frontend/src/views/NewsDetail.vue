@@ -1,18 +1,42 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ArrowLeft } from '@element-plus/icons-vue'
+import { getNewsList } from '../api/news'
 import { getActivityById } from '../data/activities'
 
 const route = useRoute()
 const router = useRouter()
 
-const activityId = computed(() => Number(route.params.id))
-const activity = computed(() => getActivityById(activityId.value))
+const article = ref<any>(null)
+
+const articleId = computed(() => Number(route.params.id))
 
 function goBack() {
   router.push('/news')
 }
+
+async function loadArticle() {
+  article.value = null
+  const act = getActivityById(articleId.value)
+  if (act) {
+    article.value = act
+    return
+  }
+  try {
+    const res = await getNewsList()
+    if (res.code === 0) {
+      article.value = res.data.find((n: any) => n.id === articleId.value) || null
+    }
+  } catch (e) { console.error(e) }
+}
+
+onMounted(() => loadArticle())
+
+watch(
+  () => route.params.id,
+  () => loadArticle()
+)
 
 watch(
   () => route.fullPath,
@@ -26,21 +50,21 @@ watch(
 <template>
   <div class="page">
     <div class="container">
-      <div v-if="activity" class="detail-layout">
+      <div v-if="article" class="detail-layout">
         <el-button class="back-button" text @click="goBack">
           <el-icon><ArrowLeft /></el-icon>
           返回活动列表
         </el-button>
 
         <article class="detail-card">
-          <img class="detail-cover" :src="activity.coverImage" :alt="activity.title" />
+          <img class="detail-cover" :src="article.coverImage" :alt="article.title" />
 
           <header class="detail-header">
-            <h1 class="detail-title">{{ activity.title }}</h1>
-            <p class="detail-summary">{{ activity.summary }}</p>
+            <h1 class="detail-title">{{ article.title }}</h1>
+            <p class="detail-summary">{{ article.summary }}</p>
           </header>
 
-          <div class="detail-content" v-html="activity.contentHtml"></div>
+          <div class="detail-content" v-html="article.contentHtml || article.content || ''"></div>
         </article>
       </div>
 

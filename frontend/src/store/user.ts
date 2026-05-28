@@ -14,5 +14,10 @@ export const useUserStore = defineStore('user', () => {
     localStorage.removeItem('user')
   }
 
-  return { user, login, logout }
+  function setUser(userData: any) {
+    user.value = userData
+    localStorage.setItem('user', JSON.stringify(userData))
+  }
+
+  return { user, login, logout, setUser }
 })

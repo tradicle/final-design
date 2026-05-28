@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { getDonationRecords, type DonationRecord } from '../api/donation'
 
-// Mock donation records
-const donationRecords = ref([
-  { id: 1, donor: '张**', item: '幼猫猫粮 10kg', date: '2026-03-01' },
-  { id: 2, donor: '李**', item: '宠物尿垫 2包', date: '2026-02-28' },
-  { id: 3, donor: '爱心人士', item: '义工服务 4小时', date: '2026-02-25' },
-  { id: 4, donor: '王**', item: '旧衣物 一批', date: '2026-02-20' },
-  { id: 5, donor: '赵**', item: '罐头 24罐', date: '2026-02-18' },
-])
+const donationRecords = ref<DonationRecord[]>([])
+
+onMounted(async () => {
+  try {
+    const res = await getDonationRecords()
+    if (res.code === 0) donationRecords.value = res.data
+  } catch (e) { console.error(e) }
+})
 </script>
 
 <template>

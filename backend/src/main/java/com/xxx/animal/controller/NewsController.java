@@ -19,4 +19,20 @@ public class NewsController {
     public Result<List<News>> list() {
         return Result.ok(newsService.list());
     }
+
+    @PostMapping
+    public Result<Boolean> create(@RequestBody News news) {
+        return Result.ok(newsService.save(news));
+    }
+
+    @PutMapping("/{id}")
+    public Result<Boolean> update(@PathVariable Long id, @RequestBody News news) {
+        news.setId(id);
+        return Result.ok(newsService.updateById(news));
+    }
+
+    @DeleteMapping("/{id}")
+    public Result<Boolean> delete(@PathVariable Long id) {
+        return Result.ok(newsService.removeById(id));
+    }
 }

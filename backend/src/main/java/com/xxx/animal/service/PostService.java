@@ -6,5 +6,6 @@ import java.util.List;
 
 public interface PostService extends IService<Post> {
     List<Post> getList();
+    List<Post> getAdminList();
     boolean createPost(Post post);
 }

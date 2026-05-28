@@ -1,58 +1,69 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { getPostList, type Post } from '../api/community'
+import { useRoute } from 'vue-router'
 
-const active = ref('posts')
-const posts = ref<Post[]>([])
-
-async function loadPosts() {
-  const res = await getPostList()
-  if (res.code === 0) {
-    posts.value = res.data
-  }
-}
-
-function audit(post: Post, pass: boolean) {
-  // In real app, call API to update status
-  post.title = (pass ? '[已通过] ' : '[已拒绝] ') + post.title
-}
-
-onMounted(() => {
-  loadPosts()
-})
+const route = useRoute()
 </script>
 
 <template>
-  <div class="page">
-    <el-card>
-      <template #header>管理员面板</template>
-      <el-tabs v-model="active">
-        <el-tab-pane label="帖子审核" name="posts">
-          <el-table :data="posts" style="width: 100%">
-            <el-table-column prop="title" label="标题" />
-            <el-table-column prop="content" label="内容" show-overflow-tooltip />
-            <el-table-column prop="username" label="作者" />
-            <el-table-column label="操作">
-              <template #default="scope">
-                <el-button size="small" type="success" @click="audit(scope.row, true)">通过</el-button>
-                <el-button size="small" type="danger" @click="audit(scope.row, false)">拒绝</el-button>
-              </template>
-            </el-table-column>
-          </el-table>
-        </el-tab-pane>
-        <el-tab-pane label="评论审核" name="comments">
-          <el-empty description="待接入：评论审核列表" />
-        </el-tab-pane>
-        <el-tab-pane label="动物管理" name="animals">
-          <el-empty description="待接入：动物增删改查" />
-        </el-tab-pane>
-      </el-tabs>
-    </el-card>
-  </div>
+  <el-container class="admin-layout">
+    <el-aside width="200px" class="admin-sidebar">
+      <div class="sidebar-header">毛茸茸之家·后台</div>
+      <el-menu
+        :default-active="route.path"
+        router
+        background-color="#5a3e2d"
+        text-color="#eadfd5"
+        active-text-color="#fff"
+      >
+        <el-menu-item index="/admin/dashboard">
+          <span>仪表盘</span>
+        </el-menu-item>
+        <el-menu-item index="/admin/animals">
+          <span>宠物管理</span>
+        </el-menu-item>
+        <el-menu-item index="/admin/news">
+          <span>资讯管理</span>
+        </el-menu-item>
+        <el-menu-item index="/admin/community">
+          <span>社区审核</span>
+        </el-menu-item>
+        <el-menu-item index="/admin/adoption">
+          <span>领养审核</span>
+        </el-menu-item>
+        <el-menu-item index="/admin/donation-claim">
+          <span>物资认领</span>
+        </el-menu-item>
+        <el-menu-item index="/admin/content">
+          <span>内容运营</span>
+        </el-menu-item>
+      </el-menu>
+    </el-aside>
+    <el-main class="admin-main">
+      <router-view />
+    </el-main>
+  </el-container>
 </template>
 
 <style scoped>
-.page {
-  padding: 16px;
+.admin-layout {
+  min-height: 100vh;
+}
+
+.admin-sidebar {
+  background-color: #5a3e2d;
+}
+
+.sidebar-header {
+  padding: 20px 16px;
+  color: #fff;
+  font-size: 16px;
+  font-weight: bold;
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.admin-main {
+  background-color: #fdf8f3;
+  padding: 24px;
 }
 </style>

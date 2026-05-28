@@ -29,6 +29,16 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     }
 
     @Override
+    public List<Post> getAdminList() {
+        List<Post> posts = baseMapper.selectAdminListWithUser();
+        for (Post post : posts) {
+            List<Comment> comments = commentMapper.selectAllByPostId(post.getId());
+            post.setComments(comments);
+        }
+        return posts;
+    }
+
+    @Override
     public boolean createPost(Post post) {
         post.setStatus(1); // Default normal
         return this.save(post);

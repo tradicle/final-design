@@ -3,13 +3,18 @@ import { useRouter } from 'vue-router'
 import { ArrowRight } from '@element-plus/icons-vue'
 import { ref, onMounted, computed } from 'vue'
 import { getAnimalList, type Animal } from '../api/animal'
+import { getDashboardSummary, getWeeklyUpdates, type DashboardSummary, type WeeklyUpdate } from '../api/dashboard'
 
 const router = useRouter()
 const starAnimals = ref<Animal[]>([])
+const summary = ref<DashboardSummary>({ totalRescueCount: 0, adoptionSuccessCount: 0, activeAnimals: 0, totalProfiles: 0, monthlyPublicBudget: '0' })
+const weeklyUpdates = ref<WeeklyUpdate[]>([])
 
 const newsAnimals = computed(() => starAnimals.value.slice(0, 5))
 const catAnimals = computed(() => starAnimals.value.filter((item) => item.category === 'CAT').slice(0, 5))
 const dogAnimals = computed(() => starAnimals.value.filter((item) => item.category !== 'CAT').slice(0, 5))
+
+const showActivities = ref<any[]>([])
 
 function go(path: string) {
   router.push(path)
@@ -35,6 +40,18 @@ onMounted(async () => {
   } catch (e) {
     console.error(e)
   }
+  try {
+    const s = await getDashboardSummary()
+    if (s.code === 0) summary.value = s.data
+  } catch (e) { console.error(e) }
+  try {
+    const u = await getWeeklyUpdates()
+    if (u.code === 0) weeklyUpdates.value = u.data
+  } catch (e) { console.error(e) }
+  try {
+    const mod = await import('../data/activities')
+    showActivities.value = (mod.activities || []).slice(0, 3)
+  } catch (e) { console.error(e) }
 })
 </script>
 
@@ -77,6 +94,27 @@ onMounted(async () => {
             </el-button>
           </div>
         </el-card>
+      </div>
+    </section>
+
+    <section class="stats-section">
+      <div class="container stats-grid">
+        <div class="stat-card">
+          <div class="stat-number">{{ summary.totalRescueCount }}</div>
+          <div class="stat-label">累计救助</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">{{ summary.adoptionSuccessCount }}</div>
+          <div class="stat-label">成功领养</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">{{ summary.activeAnimals }}</div>
+          <div class="stat-label">当前待领养</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">{{ summary.monthlyPublicBudget }}元</div>
+          <div class="stat-label">月度公开支出</div>
+        </div>
       </div>
     </section>
 
@@ -137,6 +175,38 @@ onMounted(async () => {
             <p>我们领养之家最初由几位热爱小动物的朋友发起，长期专注流浪猫狗救助、寄养、医疗和领养安置。</p>
             <p>我们坚持科学救助和规范回访，持续推动“领养代替购买”，帮助更多毛孩子获得稳定、温暖的新家。</p>
           </el-card>
+        </div>
+      </div>
+    </section>
+
+    <section class="weekly-section" v-if="weeklyUpdates.length > 0">
+      <div class="container">
+        <div class="section-header">
+          <h2>每周更新</h2>
+        </div>
+        <div class="weekly-strip">
+          <div class="weekly-item" v-for="item in weeklyUpdates" :key="item.title">
+            <h4>{{ item.title }}</h4>
+            <p>{{ item.desc }}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="activities-section" v-if="showActivities.length > 0">
+      <div class="container">
+        <div class="section-header">
+          <h2>爱心活动</h2>
+          <el-button link @click="go('/news')">查看全部 <el-icon><ArrowRight /></el-icon></el-button>
+        </div>
+        <div class="activity-list">
+          <div class="activity-card" v-for="act in showActivities" :key="act.id" @click="router.push(`/news/${act.id}`)">
+            <img v-if="act.coverImage" :src="act.coverImage" :alt="act.title" class="activity-cover" />
+            <div class="activity-text">
+              <h4>{{ act.title }}</h4>
+              <p>{{ act.summary }}</p>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -354,6 +424,120 @@ onMounted(async () => {
 
 .about-card p {
   margin-bottom: 10px;
+}
+
+.stats-section {
+  padding: 0 0 30px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.stat-card {
+  text-align: center;
+  padding: 24px 16px;
+  background: #fff;
+  border: 1px solid #e8edf3;
+  border-radius: 0;
+}
+
+.stat-number {
+  font-size: 28px;
+  font-weight: 700;
+  color: #5a3e2d;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: #8b7a6b;
+  margin-top: 6px;
+}
+
+.weekly-section {
+  padding: 10px 0 40px;
+}
+
+.weekly-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.weekly-item {
+  background: #fff;
+  border: 1px solid #e8edf3;
+  border-radius: 0;
+  padding: 18px;
+}
+
+.weekly-item h4 {
+  margin: 0 0 8px;
+  color: #5a3e2d;
+  font-size: 16px;
+}
+
+.weekly-item p {
+  margin: 0;
+  color: #6b7280;
+  line-height: 1.6;
+}
+
+.activities-section {
+  padding: 10px 0 56px;
+}
+
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.activity-card {
+  display: flex;
+  background: #fff;
+  border: 1px solid #e8edf3;
+  border-radius: 0;
+  overflow: hidden;
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+}
+
+.activity-card:hover {
+  box-shadow: 0 8px 24px rgba(17, 24, 39, 0.1);
+}
+
+.activity-cover {
+  width: 180px;
+  height: 120px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.activity-text {
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.activity-text h4 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  color: #1f2937;
+}
+
+.activity-text p {
+  margin: 0;
+  font-size: 13px;
+  color: #6b7280;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 @media (max-width: 1024px) {
