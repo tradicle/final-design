@@ -6,6 +6,7 @@ import { useUserStore } from '../store/user'
 import { ElMessage } from 'element-plus'
 import type { UploadRequestOptions } from 'element-plus'
 import { Plus, Location, Search } from '@element-plus/icons-vue'
+import { getAssetUrl } from '../utils/assets'
 
 interface LandmarkCandidate {
   title: string
@@ -209,12 +210,6 @@ function resetForm() {
   mapSearchKeyword.value = ''
   landmarkCandidates.value = []
   showCandidatePanel.value = false
-}
-
-function getImageUrl(path: string) {
-  if (!path) return ''
-  if (path.startsWith('http')) return path
-  return `http://localhost:8080${path}`
 }
 
 function getImages(json: string | undefined): string[] {
@@ -530,8 +525,8 @@ onBeforeUnmount(() => {
             <el-image 
               v-for="(img, idx) in getImages(post.images)" 
               :key="idx" 
-              :src="getImageUrl(img)" 
-              :preview-src-list="getImages(post.images).map(getImageUrl)"
+              :src="getAssetUrl(img)" 
+              :preview-src-list="getImages(post.images).map(getAssetUrl)"
               class="post-img"
             />
           </div>
@@ -555,7 +550,7 @@ onBeforeUnmount(() => {
                 <div class="comment-main">
                   <span class="comment-content">{{ comment.content }}</span>
                 </div>
-                <el-image v-if="comment.image" :src="getImageUrl(comment.image)" class="comment-image" :preview-src-list="[getImageUrl(comment.image)]" />
+                <el-image v-if="comment.image" :src="getAssetUrl(comment.image)" class="comment-image" :preview-src-list="[getAssetUrl(comment.image)]" />
                 <div class="comment-actions">
                   <el-button text size="small" @click="startReply(post, comment.username || '用户', comment.id)">回复</el-button>
                 </div>
@@ -571,7 +566,7 @@ onBeforeUnmount(() => {
                     <div class="comment-main">
                       <span class="comment-content">{{ child.content }}</span>
                     </div>
-                    <el-image v-if="child.image" :src="getImageUrl(child.image)" class="comment-image" :preview-src-list="[getImageUrl(child.image)]" />
+                    <el-image v-if="child.image" :src="getAssetUrl(child.image)" class="comment-image" :preview-src-list="[getAssetUrl(child.image)]" />
                   </div>
                 </div>
               </div>
@@ -596,9 +591,9 @@ onBeforeUnmount(() => {
                 </el-upload>
                 <el-image
                   v-if="ensureCommentDraft(post.id).image"
-                  :src="getImageUrl(ensureCommentDraft(post.id).image)"
+                  :src="getAssetUrl(ensureCommentDraft(post.id).image)"
                   class="comment-upload-preview"
-                  :preview-src-list="[getImageUrl(ensureCommentDraft(post.id).image)]"
+                  :preview-src-list="[getAssetUrl(ensureCommentDraft(post.id).image)]"
                 />
                 <el-button type="primary" size="small" @click="handleComment(post)">发送</el-button>
               </div>

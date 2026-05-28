@@ -10,6 +10,7 @@ import {
   type Comment,
   type Post
 } from '../api/community'
+import { getAssetUrl } from '../utils/assets'
 
 type AdminCommentRow = Comment & {
   postTitle: string
@@ -56,12 +57,6 @@ function getStatusType(status?: number) {
 
 function formatTime(value?: string) {
   return value ? value.replace('T', ' ') : '-'
-}
-
-function getImageUrl(path?: string) {
-  if (!path) return ''
-  if (path.startsWith('http')) return path
-  return `http://localhost:8080${path}`
 }
 
 function getImages(images?: string) {
@@ -281,8 +276,8 @@ onMounted(load)
             <el-image
               v-for="img in getImages(selectedPost.images)"
               :key="img"
-              :src="getImageUrl(img)"
-              :preview-src-list="getImages(selectedPost.images).map(getImageUrl)"
+              :src="getAssetUrl(img)"
+              :preview-src-list="getImages(selectedPost.images).map(getAssetUrl)"
               fit="cover"
               class="detail-image"
             />
@@ -302,8 +297,8 @@ onMounted(load)
               </div>
               <div class="multiline-text">{{ comment.content || '-' }}</div>
               <div v-if="comment.image" class="comment-image-line">
-                <div class="image-url-item">{{ getImageUrl(comment.image) }}</div>
-                <el-image :src="getImageUrl(comment.image)" :preview-src-list="[getImageUrl(comment.image)]" class="comment-preview-image" />
+                <div class="image-url-item">{{ getAssetUrl(comment.image) }}</div>
+                <el-image :src="getAssetUrl(comment.image)" :preview-src-list="[getAssetUrl(comment.image)]" class="comment-preview-image" />
               </div>
             </div>
           </div>
@@ -342,13 +337,13 @@ onMounted(load)
           <div class="multiline-text">{{ selectedComment.content || '-' }}</div>
         </el-descriptions-item>
         <el-descriptions-item label="图片地址">
-          {{ selectedComment.image ? getImageUrl(selectedComment.image) : '-' }}
+          {{ selectedComment.image ? getAssetUrl(selectedComment.image) : '-' }}
         </el-descriptions-item>
         <el-descriptions-item label="图片预览">
           <el-image
             v-if="selectedComment.image"
-            :src="getImageUrl(selectedComment.image)"
-            :preview-src-list="[getImageUrl(selectedComment.image)]"
+            :src="getAssetUrl(selectedComment.image)"
+            :preview-src-list="[getAssetUrl(selectedComment.image)]"
             class="comment-preview-image"
           />
           <span v-else>-</span>

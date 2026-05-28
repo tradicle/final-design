@@ -7,6 +7,7 @@ import { useUserStore } from '../store/user'
 import { ElMessage } from 'element-plus'
 import type { UploadRequestOptions } from 'element-plus'
 import { Plus, Location, Search } from '@element-plus/icons-vue'
+import { getAssetUrl } from '../utils/assets'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -44,12 +45,6 @@ let uploadMarker: any = null
 const uploadMapId = 'animal-upload-map-container'
 const mapSearchKeyword = ref('')
 const mapAddress = ref('')
-
-function getImageUrl(path: string) {
-  if (!path) return ''
-  if (path.startsWith('http')) return path
-  return `http://localhost:8080${path}`
-}
 
 async function load() {
   loading.value = true
@@ -296,7 +291,7 @@ onMounted(load)
         @click="handleCardClick(animal)"
       >
         <div class="image-container">
-          <img :src="getImageUrl(animal.avatar)" class="image" :alt="animal.name"/>
+          <img :src="getAssetUrl(animal.avatar)" class="image" :alt="animal.name"/>
           <div class="status-tag" :class="{ adopted: animal.status === 0 }">
             {{ animal.status === 1 ? '待领养' : '已领养' }}
           </div>
@@ -405,7 +400,7 @@ onMounted(load)
 
         <el-form-item label="封面头像">
           <el-upload action="" :show-file-list="false" :http-request="customUpload">
-            <img v-if="form.avatar" :src="getImageUrl(form.avatar)" class="upload-avatar" />
+            <img v-if="form.avatar" :src="getAssetUrl(form.avatar)" class="upload-avatar" />
             <el-icon v-else class="upload-icon"><Plus /></el-icon>
           </el-upload>
         </el-form-item>

@@ -5,6 +5,7 @@ import { createAnimal, deleteAnimal, getAdminAnimalPage, type Animal, updateAnim
 import { uploadFile } from '../api/file'
 import type { UploadRequestOptions } from 'element-plus'
 import { Location, Search } from '@element-plus/icons-vue'
+import { getAssetUrl } from '../utils/assets'
 
 interface LandmarkCandidate {
   title: string
@@ -204,12 +205,6 @@ async function remove(id: number) {
   } catch {
     // cancel
   }
-}
-
-function getImageUrl(path?: string) {
-  if (!path) return ''
-  if (path.startsWith('http')) return path
-  return `http://localhost:8080${path}`
 }
 
 async function uploadAvatar(options: UploadRequestOptions) {
@@ -522,7 +517,7 @@ onBeforeUnmount(() => {
     <div class="animal-grid">
       <div class="animal-card" v-for="row in rows" :key="row.id" @click="openEdit(row)">
         <div class="animal-image-wrap">
-          <img :src="getImageUrl(row.avatar)" :alt="row.name" class="animal-image" />
+          <img :src="getAssetUrl(row.avatar)" :alt="row.name" class="animal-image" />
           <span class="status-tag">{{ row.status === 1 ? '待领养' : '已领养' }}</span>
         </div>
         <div class="animal-info">
@@ -608,10 +603,10 @@ onBeforeUnmount(() => {
         <div class="upload-preview-box">
           <el-image
             v-if="form.avatar"
-            :src="getImageUrl(form.avatar)"
+            :src="getAssetUrl(form.avatar)"
             class="upload-preview-image"
             fit="cover"
-            :preview-src-list="[getImageUrl(form.avatar)]"
+            :preview-src-list="[getAssetUrl(form.avatar)]"
           />
           <div v-else class="upload-preview-empty">上传后在此预览图片</div>
         </div>

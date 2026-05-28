@@ -24,6 +24,9 @@ const route = useRoute()
         <el-menu-item index="/admin/news">
           <span>资讯管理</span>
         </el-menu-item>
+        <el-menu-item index="/admin/activities">
+          <span>爱心活动</span>
+        </el-menu-item>
         <el-menu-item index="/admin/community">
           <span>社区审核</span>
         </el-menu-item>

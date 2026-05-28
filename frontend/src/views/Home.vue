@@ -5,26 +5,23 @@ import { ref, onMounted, computed } from 'vue'
 import { getAnimalList, type Animal } from '../api/animal'
 import { getDashboardSummary, getWeeklyUpdates, type DashboardSummary, type WeeklyUpdate } from '../api/dashboard'
 import { getNewsList, getNewsTargetPath, type NewsItem } from '../api/news'
+import { getActivityList, type ActivityItem } from '../api/activity'
+import { getAssetUrl } from '../utils/assets'
 
 const router = useRouter()
 const starAnimals = ref<Animal[]>([])
 const newsList = ref<NewsItem[]>([])
+const activityList = ref<ActivityItem[]>([])
 const summary = ref<DashboardSummary>({ totalRescueCount: 0, adoptionSuccessCount: 0, activeAnimals: 0, totalProfiles: 0, monthlyPublicBudget: '0' })
 const weeklyUpdates = ref<WeeklyUpdate[]>([])
 
 const homeNews = computed(() => newsList.value.slice(0, 5))
 const catAnimals = computed(() => starAnimals.value.filter((item) => item.category === 'CAT').slice(0, 5))
 const dogAnimals = computed(() => starAnimals.value.filter((item) => item.category !== 'CAT').slice(0, 5))
-const featuredNews = computed(() => newsList.value.slice(0, 3))
+const featuredActivities = computed(() => activityList.value.slice(0, 3))
 
 function go(path: string) {
   router.push(path)
-}
-
-function getImageUrl(path: string) {
-  if (!path) return ''
-  if (path.startsWith('http')) return path
-  return `http://localhost:8080${path}`
 }
 
 function toPet(animal: Animal) {
@@ -57,6 +54,10 @@ onMounted(async () => {
     const newsRes = await getNewsList()
     if (newsRes.code === 0) newsList.value = newsRes.data
   } catch (e) { console.error(e) }
+  try {
+    const activityRes = await getActivityList()
+    if (activityRes.code === 0) activityList.value = activityRes.data
+  } catch (e) { console.error(e) }
 })
 </script>
 
@@ -73,7 +74,7 @@ onMounted(async () => {
           <el-carousel :interval="4200" height="360px" indicator-position="outside">
             <el-carousel-item v-for="item in homeNews" :key="item.id">
               <div class="news-slide" @click="toNewsTarget(item)">
-                <img :src="getImageUrl(item.coverImage)" :alt="item.title" />
+                <img :src="getAssetUrl(item.coverImage)" :alt="item.title" />
                 <div class="news-overlay">
                   <h3>{{ item.title }}</h3>
                   <p>{{ item.summary || '点击查看对应宠物档案' }}</p>
@@ -135,7 +136,7 @@ onMounted(async () => {
         <div class="animal-grid">
           <div class="animal-card" v-for="animal in catAnimals" :key="`cat-${animal.id}`" @click="toPet(animal)">
             <div class="animal-image-wrap">
-              <img :src="getImageUrl(animal.avatar)" :alt="animal.name" class="animal-image" />
+              <img :src="getAssetUrl(animal.avatar)" :alt="animal.name" class="animal-image" />
             </div>
             <div class="animal-info">
               <h3>{{ animal.name }}</h3>
@@ -151,7 +152,7 @@ onMounted(async () => {
         <div class="animal-grid">
           <div class="animal-card" v-for="animal in dogAnimals" :key="`dog-${animal.id}`" @click="toPet(animal)">
             <div class="animal-image-wrap">
-              <img :src="getImageUrl(animal.avatar)" :alt="animal.name" class="animal-image" />
+              <img :src="getAssetUrl(animal.avatar)" :alt="animal.name" class="animal-image" />
             </div>
             <div class="animal-info">
               <h3>{{ animal.name }}</h3>
@@ -198,18 +199,18 @@ onMounted(async () => {
       </div>
     </section>
 
-    <section class="activities-section" v-if="featuredNews.length > 0">
+    <section class="activities-section" v-if="featuredActivities.length > 0">
       <div class="container">
         <div class="section-header">
           <h2>爱心活动</h2>
-          <el-button link @click="go('/news')">查看全部 <el-icon><ArrowRight /></el-icon></el-button>
+          <el-button link @click="go('/activities')">查看全部 <el-icon><ArrowRight /></el-icon></el-button>
         </div>
         <div class="activity-list">
-          <div class="activity-card" v-for="item in featuredNews" :key="item.id" @click="toNewsTarget(item)">
-            <img v-if="item.coverImage" :src="getImageUrl(item.coverImage)" :alt="item.title" class="activity-cover" />
+          <div class="activity-card" v-for="item in featuredActivities" :key="item.id" @click="router.push(`/activities/${item.id}`)">
+            <img v-if="item.coverImage" :src="getAssetUrl(item.coverImage)" :alt="item.title" class="activity-cover" />
             <div class="activity-text">
               <h4>{{ item.title }}</h4>
-              <p>{{ item.summary || '点击查看对应宠物档案' }}</p>
+              <p>{{ item.summary || '点击查看活动详情' }}</p>
             </div>
           </div>
         </div>

@@ -6,6 +6,7 @@ import type { UploadRequestOptions } from 'element-plus'
 import { changePassword, getDefaultAvatars, getProfile, updateProfile, type DefaultAvatar, type User } from '../api/user'
 import { uploadFile } from '../api/file'
 import { useUserStore } from '../store/user'
+import { getAssetUrl } from '../utils/assets'
 
 const router = useRouter()
 const route = useRoute()
@@ -38,12 +39,6 @@ const isPasswordPage = computed(() => route.query.mode === 'password')
 
 function getErrorMessage(error: any, fallback: string) {
   return error?.response?.data?.message || error?.message || fallback
-}
-
-function getImageUrl(path: string) {
-  if (!path) return ''
-  if (path.startsWith('http') || path.startsWith('data:image')) return path
-  return `http://localhost:8080${path}`
 }
 
 function syncProfile(user: User) {
@@ -192,7 +187,7 @@ onMounted(() => {
       <div v-if="!isPasswordPage" class="account-layout">
         <button class="avatar-button" type="button" @click="openAvatarDialog">
           <div class="avatar-box">
-            <el-avatar :size="120" :src="getImageUrl(displayAvatar)">
+            <el-avatar :size="120" :src="getAssetUrl(displayAvatar)">
               {{ displayName.slice(0, 1) }}
             </el-avatar>
             <div class="avatar-mask">修改头像</div>

@@ -5,6 +5,7 @@ import { uploadFile } from '../api/file'
 import { createNews, deleteNews, getNewsList, type NewsItem, updateNews } from '../api/news'
 import { getAnimalList, type Animal } from '../api/animal'
 import type { UploadRequestOptions } from 'element-plus'
+import { getAssetUrl } from '../utils/assets'
 
 const loading = ref(false)
 const saving = ref(false)
@@ -166,12 +167,6 @@ async function generateFromAnimals() {
   }
 }
 
-function getImageUrl(path?: string) {
-  if (!path) return ''
-  if (path.startsWith('http')) return path
-  return `http://localhost:8080${path}`
-}
-
 async function uploadCover(options: UploadRequestOptions) {
   uploading.value = true
   try {
@@ -207,7 +202,7 @@ onMounted(async () => {
     <div class="news-grid">
       <div class="news-card" v-for="row in rows" :key="row.id" @click="openEdit(row)">
         <div class="news-cover-wrap">
-          <img :src="getImageUrl(row.coverImage)" :alt="row.title" class="news-cover" />
+          <img :src="getAssetUrl(row.coverImage)" :alt="row.title" class="news-cover" />
         </div>
         <div class="news-info">
           <h3>{{ row.title }}</h3>
@@ -235,7 +230,7 @@ onMounted(async () => {
           <el-button :loading="uploading">上传封面</el-button>
         </el-upload>
         <div class="cover-preview">
-          <img v-if="form.coverImage" :src="getImageUrl(form.coverImage)" alt="封面预览" class="cover-preview-image" />
+          <img v-if="form.coverImage" :src="getAssetUrl(form.coverImage)" alt="封面预览" class="cover-preview-image" />
           <div v-else class="cover-preview-empty">上传后在这里预览封面</div>
         </div>
       </div>

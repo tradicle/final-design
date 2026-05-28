@@ -24,6 +24,9 @@ import AdminCommunity from '../views/AdminCommunity.vue'
 import AdminAdoption from '../views/AdminAdoption.vue'
 import AdminDonationClaim from '../views/AdminDonationClaim.vue'
 import AdminContent from '../views/AdminContent.vue'
+import Activities from '../views/Activities.vue'
+import ActivityDetail from '../views/ActivityDetail.vue'
+import AdminActivities from '../views/AdminActivities.vue'
 
 export const router = createRouter({
   history: createWebHistory(),
@@ -36,6 +39,8 @@ export const router = createRouter({
     { path: '/register', component: Register },
     { path: '/news', component: News },
     { path: '/news/:id', component: NewsDetail },
+    { path: '/activities', component: Activities },
+    { path: '/activities/:id', component: ActivityDetail },
     { path: '/animals', component: AnimalList },
     { path: '/pet/:id', component: PetDetail },
     { path: '/adoption/rules', component: AdoptionRules },
@@ -56,6 +61,7 @@ export const router = createRouter({
         { path: 'dashboard', component: AdminDashboard },
         { path: 'animals', component: AdminAnimals },
         { path: 'news', component: AdminNews },
+        { path: 'activities', component: AdminActivities },
         { path: 'community', component: AdminCommunity },
         { path: 'adoption', component: AdminAdoption },
         { path: 'donation-claim', component: AdminDonationClaim },

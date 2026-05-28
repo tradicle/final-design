@@ -2,15 +2,10 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getNewsList, getNewsTargetPath, type NewsItem } from '../api/news'
+import { getAssetUrl } from '../utils/assets'
 
 const router = useRouter()
 const newsList = ref<NewsItem[]>([])
-
-function getImageUrl(path?: string) {
-  if (!path) return ''
-  if (path.startsWith('http')) return path
-  return `http://localhost:8080${path}`
-}
 
 function goDetail(item: NewsItem) {
   router.push(getNewsTargetPath(item))
@@ -32,7 +27,7 @@ onMounted(async () => {
       <div class="news-list">
         <div class="news-item" v-for="item in newsList" :key="item.id" @click="goDetail(item)">
           <div class="news-img">
-            <img :src="getImageUrl(item.coverImage)" :alt="item.title" />
+            <img :src="getAssetUrl(item.coverImage)" :alt="item.title" />
           </div>
           <div class="news-content">
             <h3 class="news-title">{{ item.title }}</h3>

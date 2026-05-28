@@ -63,7 +63,7 @@ function logout() {
           </el-sub-menu>
 
           <el-menu-item index="/community">社区</el-menu-item>
-          <el-menu-item index="/news">爱心活动</el-menu-item>
+          <el-menu-item index="/activities">爱心活动</el-menu-item>
           <el-menu-item index="/donate">捐赠</el-menu-item>
           <el-menu-item index="/knowledge">小常识</el-menu-item>
           <el-menu-item index="/about">关于我们</el-menu-item>
@@ -91,19 +91,19 @@ function logout() {
       <div class="footer-inner">
         <div class="footer-col">
           <h3>联系我们</h3>
-          <p>地址：某某市某某区流浪动物救助中心</p>
-          <p>电话：010-12345678</p>
-          <p>邮箱：contact@pohome.cn</p>
+          <p>地址：深圳市南山区沙河街道睿印商城 B2 层下沉广场喵喵领养小屋</p>
+          <p>电话：0755-86035169</p>
+          <p>邮箱：contact@animal-rescue.local</p>
         </div>
         <div class="footer-col">
           <h3>友情链接</h3>
-          <p>中国小动物保护协会</p>
-          <p>北京领养日</p>
+          <p>校园流浪动物救助联盟</p>
+          <p>深圳本地领养合作组织</p>
         </div>
         <div class="footer-col">
           <h3>关注我们</h3>
-          <p>微信公众号：汪汪喵呜</p>
-          <p>微博：@汪汪喵呜孤儿院</p>
+          <p>微信公众号：汪汪喵呜孤儿院</p>
+          <p>服务时间：周一至周日 9:00-18:00</p>
         </div>
       </div>
       <div class="footer-bottom">

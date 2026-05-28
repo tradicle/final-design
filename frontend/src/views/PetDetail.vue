@@ -5,6 +5,7 @@ import { getAnimalByNo, type Animal } from '../api/animal'
 import { useUserStore } from '../store/user'
 import { ElMessage } from 'element-plus'
 import { Male, Female } from '@element-plus/icons-vue'
+import { getAssetUrl } from '../utils/assets'
 
 const route = useRoute()
 const router = useRouter()
@@ -15,12 +16,6 @@ const loading = ref(false)
 // Map related
 let map: any = null
 const detailMapId = 'pet-detail-map'
-
-function getImageUrl(path: string) {
-  if (!path) return ''
-  if (path.startsWith('http')) return path
-  return `http://localhost:8080${path}`
-}
 
 async function load() {
   const animalNo = route.params.id as string
@@ -107,9 +102,9 @@ onMounted(load)
       <div class="top-section">
         <div class="left-image">
           <el-image 
-            :src="getImageUrl(animal.avatar)" 
+            :src="getAssetUrl(animal.avatar)" 
             class="main-avatar" 
-            :preview-src-list="[getImageUrl(animal.avatar)]"
+            :preview-src-list="[getAssetUrl(animal.avatar)]"
             fit="cover"
           />
         </div>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, ref, onMounted } from 'vue'
+import { computed, reactive, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { getDonationRecords, getUrgentNeeds, type DonationRecord, type UrgentNeed } from '../api/donation'
@@ -14,6 +14,8 @@ const claimDialogVisible = ref(false)
 const submitting = ref(false)
 const submittedNeedIds = ref<number[]>([])
 const currentNeed = ref<UrgentNeed | null>(null)
+const currentPage = ref(1)
+const pageSize = 8
 const claimForm = reactive({
   quantity: '',
   contactName: '',
@@ -73,6 +75,11 @@ async function submitClaim() {
   }
 }
 
+const pagedDonationRecords = computed(() => {
+  const start = (currentPage.value - 1) * pageSize
+  return donationRecords.value.slice(start, start + pageSize)
+})
+
 onMounted(async () => {
   try {
     const [recordsRes, urgentRes] = await Promise.all([getDonationRecords(), getUrgentNeeds()])
@@ -122,9 +129,9 @@ onMounted(async () => {
             <h2>联系方式</h2>
           </div>
           <div class="contact-card">
-            <p><strong>物资接收地址：</strong> 某某市某某区流浪动物救助中心</p>
+            <p><strong>物资接收地址：</strong> 深圳市南山区沙河街道睿印商城 B2 层下沉广场喵喵领养小屋</p>
             <p><strong>收件人：</strong> 汪汪喵呜物资组</p>
-            <p><strong>联系电话：</strong> 010-12345678</p>
+            <p><strong>联系电话：</strong> 0755-86035169</p>
           </div>
         </div>
 
@@ -157,14 +164,21 @@ onMounted(async () => {
             <span class="sub-text">我们诚挚地感谢以下捐助者和捐助团体</span>
           </div>
           
-          <el-table :data="donationRecords" stripe style="width: 100%" class="records-table">
+          <el-table :data="pagedDonationRecords" stripe style="width: 100%" class="records-table">
             <el-table-column prop="date" label="日期" width="180" />
             <el-table-column prop="donor" label="捐助者" width="180" />
             <el-table-column prop="item" label="捐助物品/内容" />
           </el-table>
           
           <div class="pagination">
-            <el-pagination background layout="prev, pager, next" :total="50" />
+            <el-pagination
+              v-if="donationRecords.length > pageSize"
+              v-model:current-page="currentPage"
+              background
+              layout="prev, pager, next"
+              :page-size="pageSize"
+              :total="donationRecords.length"
+            />
           </div>
         </div>
       </div>

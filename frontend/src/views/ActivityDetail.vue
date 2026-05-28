@@ -1,78 +1,51 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ArrowLeft } from '@element-plus/icons-vue'
-import { getNewsList, parseNewsAnimalNo, type NewsItem } from '../api/news'
+import { getActivityDetail, type ActivityItem } from '../api/activity'
 import { getAssetUrl } from '../utils/assets'
 
 const route = useRoute()
 const router = useRouter()
+const activity = ref<ActivityItem | null>(null)
 
-const article = ref<NewsItem | null>(null)
-
-const articleId = computed(() => Number(route.params.id))
-
-function goBack() {
-  router.push('/news')
+async function load() {
+  const id = Number(route.params.id)
+  if (!id) {
+    activity.value = null
+    return
+  }
+  const res = await getActivityDetail(id)
+  if (res.code === 0) activity.value = res.data
 }
 
-async function loadArticle() {
-  article.value = null
-  try {
-    const res = await getNewsList()
-    if (res.code === 0) {
-      const target = res.data.find((item) => item.id === articleId.value) || null
-      if (!target) return
-      const animalNo = parseNewsAnimalNo(target.content)
-      if (animalNo) {
-        router.replace(`/pet/${animalNo}`)
-        return
-      }
-      article.value = target
-    }
-  } catch (e) { console.error(e) }
-}
-
-onMounted(() => loadArticle())
-
-watch(
-  () => route.params.id,
-  () => loadArticle()
-)
-
-watch(
-  () => route.fullPath,
-  () => {
-    window.scrollTo({ top: 0, behavior: 'auto' })
-  },
-  { immediate: true }
-)
+onMounted(load)
+watch(() => route.params.id, load)
 </script>
 
 <template>
   <div class="page">
     <div class="container">
-      <div v-if="article" class="detail-layout">
-        <el-button class="back-button" text @click="goBack">
+      <div v-if="activity" class="detail-layout">
+        <el-button class="back-button" text @click="router.push('/activities')">
           <el-icon><ArrowLeft /></el-icon>
           返回活动列表
         </el-button>
 
         <article class="detail-card">
-          <img class="detail-cover" :src="getAssetUrl(article.coverImage)" :alt="article.title" />
-
+          <img class="detail-cover" :src="getAssetUrl(activity.coverImage)" :alt="activity.title" />
           <header class="detail-header">
-            <h1 class="detail-title">{{ article.title }}</h1>
-            <p class="detail-summary">{{ article.summary }}</p>
+            <p class="time">{{ (activity.publishTime || '').replace('T', ' ') }}</p>
+            <h1 class="detail-title">{{ activity.title }}</h1>
+            <p class="detail-summary">{{ activity.summary }}</p>
           </header>
-
-          <div class="detail-content" v-html="article.content || ''"></div>
+          <div class="detail-content" v-html="activity.content || ''"></div>
         </article>
       </div>
 
       <div v-else class="empty-wrap">
-        <el-empty description="活动不存在或已被移除" />
-        <el-button type="primary" @click="goBack">返回爱心活动</el-button>
+        <el-empty description="活动不存在或已被删除" />
+        <el-button type="primary" @click="router.push('/activities')">返回爱心活动</el-button>
       </div>
     </div>
   </div>
@@ -103,15 +76,15 @@ watch(
 
 .detail-card {
   padding: 24px;
-  border-radius: 0;
   background: #fff;
-  box-shadow: none;
+  border-radius: 18px;
+  box-shadow: 0 12px 28px rgba(44, 30, 24, 0.08);
 }
 
 .detail-cover {
   width: 100%;
   max-height: 420px;
-  border-radius: 22px;
+  border-radius: 20px;
   object-fit: cover;
 }
 
@@ -119,10 +92,16 @@ watch(
   padding: 28px 4px 14px;
 }
 
+.time {
+  margin: 0 0 10px;
+  color: #aa8e79;
+  font-size: 13px;
+}
+
 .detail-title {
   margin: 0;
   color: #2e241e;
-  font-size: 36px;
+  font-size: 34px;
   line-height: 1.35;
 }
 
@@ -151,10 +130,6 @@ watch(
   border-radius: 18px;
 }
 
-.detail-content :deep(figure) {
-  margin: 18px 0;
-}
-
 .detail-content :deep(p),
 .detail-content :deep(h3) {
   margin: 14px 0;
@@ -180,24 +155,5 @@ watch(
   align-items: center;
   gap: 12px;
   padding: 60px 0;
-}
-
-@media (max-width: 768px) {
-  .page {
-    padding: 24px 14px 56px;
-  }
-
-  .detail-card {
-    padding: 16px;
-    border-radius: 0;
-  }
-
-  .detail-title {
-    font-size: 28px;
-  }
-
-  .detail-header {
-    padding: 22px 2px 10px;
-  }
 }
 </style>

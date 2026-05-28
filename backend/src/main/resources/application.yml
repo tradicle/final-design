@@ -20,3 +20,7 @@ mybatis-plus:
       logic-delete-field: deleted
       logic-delete-value: 1
       logic-not-delete-value: 0
+
+app:
+  cors:
+    allowed-origins: http://localhost:5173,http://127.0.0.1:5173
