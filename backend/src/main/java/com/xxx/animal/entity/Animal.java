@@ -39,9 +39,11 @@ public class Animal {
     private String description;
     
     private String detailContent; // Rich text detail
-    
+
+    private String location; // Found Location Name
+
     private BigDecimal latitude;
-    
+
     private BigDecimal longitude;
 
     private LocalDateTime createTime;
