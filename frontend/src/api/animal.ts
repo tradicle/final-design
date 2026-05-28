@@ -22,6 +22,7 @@ export interface Animal {
   status: number
   description: string
   detailContent?: string
+  location?: string
   latitude?: number
   longitude?: number
   createTime: string

@@ -5,10 +5,12 @@ export interface Comment {
   postId: number
   userId: number
   username?: string
+  nickname?: string
   avatar?: string
   content: string
   image?: string
   parentId?: number
+  status?: number
   createTime?: string
 }
 
@@ -16,6 +18,7 @@ export interface Post {
   id?: number
   userId: number
   username?: string
+  nickname?: string
   avatar?: string
   title: string
   content: string
@@ -23,7 +26,9 @@ export interface Post {
   location?: string
   latitude?: number
   longitude?: number
+  status?: number
   createTime?: string
+  updateTime?: string
   comments?: Comment[]
 }
 

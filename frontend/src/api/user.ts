@@ -3,9 +3,12 @@ import { http } from './http'
 export interface User {
   id: number
   username: string
+  nickname?: string
+  email?: string
   role: string
   avatar: string
   createTime: string
+  updateTime?: string
 }
 
 export async function login(data: any) {

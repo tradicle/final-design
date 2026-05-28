@@ -2,6 +2,7 @@
 import { reactive, ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getAnimalDetail, type Animal } from '../api/animal'
+import { createAdoptionApplication } from '../api/adoption-application'
 import { ElMessage } from 'element-plus'
 
 const route = useRoute()
@@ -41,15 +42,36 @@ async function onSubmit() {
     ElMessage.warning('请填写必要信息')
     return
   }
+
+  if (!animal.value?.id) {
+    ElMessage.warning('未找到对应宠物档案')
+    return
+  }
   
   loading.value = true
   try {
-    // Simulate API call
-    await new Promise((r) => setTimeout(r, 800))
-    ElMessage.success('申请已提交，我们会尽快联系您审核！')
-    router.push('/animals')
+    const res = await createAdoptionApplication({
+      animalId: animal.value.id,
+      applicantName: form.applicantName.trim(),
+      age: form.age,
+      job: form.job.trim(),
+      income: form.income,
+      address: form.address.trim(),
+      phone: form.phone.trim(),
+      wechat: form.wechat.trim(),
+      housing: form.housing,
+      experience: form.experience,
+      familyMembers: form.familyMembers.trim(),
+      reason: form.reason.trim(),
+    })
+    if (res.code === 0) {
+      ElMessage.success('申请已提交，我们会尽快联系您审核！')
+      router.push('/animals')
+    } else {
+      ElMessage.error(res.message || '提交失败')
+    }
   } catch (e) {
-    ElMessage.error('提交失败')
+    ElMessage.error('提交失败，请先确认已登录且后端服务正常')
   } finally {
     loading.value = false
   }
