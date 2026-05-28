@@ -20,7 +20,8 @@ async function onSubmit() {
     if (res.code === 0) {
       userStore.login(res.data)
       ElMessage.success('登录成功')
-      router.push('/')
+      const targetPath = res.data?.role === 'ADMIN' ? '/admin/dashboard' : '/'
+      router.push(targetPath)
     } else {
       ElMessage.error(res.message || '登录失败')
     }

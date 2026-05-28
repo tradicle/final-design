@@ -2,15 +2,20 @@
 import { computed, ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ArrowLeft } from '@element-plus/icons-vue'
-import { getNewsList } from '../api/news'
-import { getActivityById } from '../data/activities'
+import { getNewsList, parseNewsAnimalNo, type NewsItem } from '../api/news'
 
 const route = useRoute()
 const router = useRouter()
 
-const article = ref<any>(null)
+const article = ref<NewsItem | null>(null)
 
 const articleId = computed(() => Number(route.params.id))
+
+function getImageUrl(path?: string) {
+  if (!path) return ''
+  if (path.startsWith('http')) return path
+  return `http://localhost:8080${path}`
+}
 
 function goBack() {
   router.push('/news')
@@ -18,15 +23,17 @@ function goBack() {
 
 async function loadArticle() {
   article.value = null
-  const act = getActivityById(articleId.value)
-  if (act) {
-    article.value = act
-    return
-  }
   try {
     const res = await getNewsList()
     if (res.code === 0) {
-      article.value = res.data.find((n: any) => n.id === articleId.value) || null
+      const target = res.data.find((item) => item.id === articleId.value) || null
+      if (!target) return
+      const animalNo = parseNewsAnimalNo(target.content)
+      if (animalNo) {
+        router.replace(`/pet/${animalNo}`)
+        return
+      }
+      article.value = target
     }
   } catch (e) { console.error(e) }
 }
@@ -57,14 +64,14 @@ watch(
         </el-button>
 
         <article class="detail-card">
-          <img class="detail-cover" :src="article.coverImage" :alt="article.title" />
+          <img class="detail-cover" :src="getImageUrl(article.coverImage)" :alt="article.title" />
 
           <header class="detail-header">
             <h1 class="detail-title">{{ article.title }}</h1>
             <p class="detail-summary">{{ article.summary }}</p>
           </header>
 
-          <div class="detail-content" v-html="article.contentHtml || article.content || ''"></div>
+          <div class="detail-content" v-html="article.content || ''"></div>
         </article>
       </div>
 

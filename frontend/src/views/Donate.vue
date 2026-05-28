@@ -1,13 +1,83 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { getDonationRecords, type DonationRecord } from '../api/donation'
+import { reactive, ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
+import { getDonationRecords, getUrgentNeeds, type DonationRecord, type UrgentNeed } from '../api/donation'
+import { createDonationClaim } from '../api/donation-claim'
+import { useUserStore } from '../store/user'
 
+const router = useRouter()
+const userStore = useUserStore()
 const donationRecords = ref<DonationRecord[]>([])
+const urgentNeeds = ref<UrgentNeed[]>([])
+const claimDialogVisible = ref(false)
+const submitting = ref(false)
+const submittedNeedIds = ref<number[]>([])
+const currentNeed = ref<UrgentNeed | null>(null)
+const claimForm = reactive({
+  quantity: '',
+  contactName: '',
+  phone: '',
+  wechat: '',
+  pickupDate: '',
+  remark: '',
+})
+
+function resetClaimForm() {
+  claimForm.quantity = ''
+  claimForm.contactName = userStore.user?.nickname || userStore.user?.username || ''
+  claimForm.phone = ''
+  claimForm.wechat = ''
+  claimForm.pickupDate = ''
+  claimForm.remark = ''
+}
+
+function openClaim(need: UrgentNeed) {
+  if (!userStore.user) {
+    ElMessage.warning('请先登录后提交认领')
+    router.push('/login')
+    return
+  }
+  currentNeed.value = need
+  resetClaimForm()
+  claimDialogVisible.value = true
+}
+
+async function submitClaim() {
+  if (!currentNeed.value) return
+  if (!claimForm.quantity.trim() || !claimForm.contactName.trim() || !claimForm.phone.trim()) {
+    ElMessage.warning('请填写认领数量、联系人和手机号')
+    return
+  }
+  submitting.value = true
+  try {
+    const res = await createDonationClaim({
+      needName: currentNeed.value.name,
+      needGap: currentNeed.value.gap,
+      quantity: claimForm.quantity.trim(),
+      contactName: claimForm.contactName.trim(),
+      phone: claimForm.phone.trim(),
+      wechat: claimForm.wechat.trim(),
+      pickupDate: claimForm.pickupDate.trim(),
+      remark: claimForm.remark.trim(),
+    })
+    if (res.code === 0) {
+      submittedNeedIds.value = [...submittedNeedIds.value, currentNeed.value.id]
+      claimDialogVisible.value = false
+      ElMessage.success('认领提交成功，请等待管理员审核')
+    } else {
+      ElMessage.error(res.message || '认领提交失败')
+    }
+  } finally {
+    submitting.value = false
+  }
+}
 
 onMounted(async () => {
   try {
-    const res = await getDonationRecords()
-    if (res.code === 0) donationRecords.value = res.data
+    const [recordsRes, urgentRes] = await Promise.all([getDonationRecords(), getUrgentNeeds()])
+    if (recordsRes.code === 0) donationRecords.value = recordsRes.data
+    if (urgentRes.code === 0) urgentNeeds.value = urgentRes.data
   } catch (e) { console.error(e) }
 })
 </script>
@@ -34,15 +104,8 @@ onMounted(async () => {
                 <strong>食物、衣物、玩具等实物</strong>。
               </div>
             </div>
-            <div class="scope-item">
-              <div class="index">2</div>
-              <div class="text">
-                我们也非常希望爱心朋友们能为小猫小狗们
-                <strong>捐出您的时间</strong>（如参与志愿者服务）。
-              </div>
-            </div>
             <div class="scope-item highlight">
-              <div class="index">3</div>
+              <div class="index">2</div>
               <div class="text">
                 我们暂 <strong>不接受现金</strong> 的捐助。
               </div>
@@ -62,7 +125,28 @@ onMounted(async () => {
             <p><strong>物资接收地址：</strong> 某某市某某区流浪动物救助中心</p>
             <p><strong>收件人：</strong> 汪汪喵呜物资组</p>
             <p><strong>联系电话：</strong> 010-12345678</p>
-            <p><strong>志愿者报名：</strong> 请访问“志愿者”板块</p>
+          </div>
+        </div>
+
+        <div class="section urgent-section" v-if="urgentNeeds.length > 0">
+          <div class="section-header">
+            <h2>急需物资清单</h2>
+          </div>
+          <div class="urgent-grid">
+            <div class="urgent-card" v-for="need in urgentNeeds" :key="need.id">
+              <div>
+                <h3>{{ need.name }}</h3>
+                <p>当前缺口：{{ need.gap }}</p>
+                <p>更新时间：{{ need.updatedAt || '待更新' }}</p>
+              </div>
+              <el-button
+                type="primary"
+                :disabled="submittedNeedIds.includes(need.id)"
+                @click="openClaim(need)"
+              >
+                {{ submittedNeedIds.includes(need.id) ? '已提交认领' : '我要认领' }}
+              </el-button>
+            </div>
           </div>
         </div>
 
@@ -86,6 +170,41 @@ onMounted(async () => {
       </div>
     </div>
   </div>
+
+  <el-dialog v-model="claimDialogVisible" title="认领急需物资" width="520px">
+    <div class="claim-form">
+      <el-form label-width="92px">
+        <el-form-item label="物资名称">
+          <el-input :model-value="currentNeed?.name || ''" readonly />
+        </el-form-item>
+        <el-form-item label="当前缺口">
+          <el-input :model-value="currentNeed?.gap || ''" readonly />
+        </el-form-item>
+        <el-form-item label="认领数量">
+          <el-input v-model="claimForm.quantity" placeholder="请输入认领数量" />
+        </el-form-item>
+        <el-form-item label="联系人">
+          <el-input v-model="claimForm.contactName" placeholder="请输入联系人" />
+        </el-form-item>
+        <el-form-item label="手机号">
+          <el-input v-model="claimForm.phone" placeholder="请输入手机号" />
+        </el-form-item>
+        <el-form-item label="微信号">
+          <el-input v-model="claimForm.wechat" placeholder="选填" />
+        </el-form-item>
+        <el-form-item label="预计送达">
+          <el-input v-model="claimForm.pickupDate" placeholder="选填，例如 2026-06-01" />
+        </el-form-item>
+        <el-form-item label="备注">
+          <el-input v-model="claimForm.remark" type="textarea" :rows="3" placeholder="选填" />
+        </el-form-item>
+      </el-form>
+    </div>
+    <template #footer>
+      <el-button @click="claimDialogVisible = false">取消</el-button>
+      <el-button type="primary" :loading="submitting" @click="submitClaim">提交认领</el-button>
+    </template>
+  </el-dialog>
 </template>
 
 <style scoped>
@@ -214,6 +333,40 @@ onMounted(async () => {
 
 .contact-card p:last-child {
   margin-bottom: 0;
+}
+
+.urgent-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.urgent-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+  min-height: 190px;
+  padding: 22px;
+  border: 1px solid #ebe4db;
+  border-radius: 12px;
+  background: #fffaf6;
+}
+
+.urgent-card h3 {
+  margin: 0 0 10px;
+  color: #5a3e2d;
+  font-size: 18px;
+}
+
+.urgent-card p {
+  margin: 0 0 8px;
+  color: #7a685b;
+  line-height: 1.7;
+}
+
+.claim-form {
+  padding-top: 6px;
 }
 
 /* Records Section */

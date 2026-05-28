@@ -9,6 +9,17 @@ export interface NewsItem {
   publishTime: string
 }
 
+export function parseNewsAnimalNo(content?: string) {
+  if (!content || !content.startsWith('PET:')) return ''
+  return content.slice(4).trim()
+}
+
+export function getNewsTargetPath(item: Pick<NewsItem, 'id' | 'content'>) {
+  const animalNo = parseNewsAnimalNo(item.content)
+  if (animalNo) return `/pet/${animalNo}`
+  return item.id ? `/news/${item.id}` : '/news'
+}
+
 export async function getNewsList() {
   const { data } = await http.get('/api/news')
   return data as { code: number; message: string; data: NewsItem[] }

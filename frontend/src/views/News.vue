@@ -1,13 +1,19 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { getNewsList } from '../api/news'
+import { getNewsList, getNewsTargetPath, type NewsItem } from '../api/news'
 
 const router = useRouter()
-const newsList = ref<any[]>([])
+const newsList = ref<NewsItem[]>([])
 
-function goDetail(id: number) {
-  router.push(`/news/${id}`)
+function getImageUrl(path?: string) {
+  if (!path) return ''
+  if (path.startsWith('http')) return path
+  return `http://localhost:8080${path}`
+}
+
+function goDetail(item: NewsItem) {
+  router.push(getNewsTargetPath(item))
 }
 
 onMounted(async () => {
@@ -24,15 +30,15 @@ onMounted(async () => {
       <h2 class="page-title">救助资讯</h2>
 
       <div class="news-list">
-        <div class="news-item" v-for="item in newsList" :key="item.id" @click="goDetail(item.id)">
+        <div class="news-item" v-for="item in newsList" :key="item.id" @click="goDetail(item)">
           <div class="news-img">
-            <img :src="item.coverImage" :alt="item.title" />
+            <img :src="getImageUrl(item.coverImage)" :alt="item.title" />
           </div>
           <div class="news-content">
             <h3 class="news-title">{{ item.title }}</h3>
-            <p class="news-date">{{ item.publishTime }}</p>
+            <p class="news-date">{{ (item.publishTime || '').replace('T', ' ') }}</p>
             <p class="news-summary">{{ item.summary }}</p>
-            <el-button link type="primary">查看详情</el-button>
+            <el-button link type="primary">查看宠物档案</el-button>
           </div>
         </div>
       </div>

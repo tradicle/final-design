@@ -7,6 +7,7 @@ export interface DonationRecord {
 }
 
 export interface UrgentNeed {
+  id: number
   name: string
   gap: string
   updatedAt: string
