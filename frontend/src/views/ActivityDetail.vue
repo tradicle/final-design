@@ -54,7 +54,7 @@ watch(() => route.params.id, load)
 <style scoped>
 .page {
   padding: 32px 20px 72px;
-  background: linear-gradient(180deg, #fff7ef 0%, #ffffff 22%);
+  background: #faf7f2;
 }
 
 .container {

@@ -223,7 +223,7 @@ onMounted(load)
 <style scoped>
 .page {
   padding: 40px 20px;
-  background-color: #f5f7fa;
+  background-color: #faf7f2;
   min-height: 100vh;
 }
 

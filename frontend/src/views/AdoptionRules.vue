@@ -77,7 +77,7 @@ function handleAgree() {
 <style scoped>
 .page {
   padding: 40px 20px;
-  background-color: #f9f9f9;
+  background-color: #faf7f2;
   min-height: 100vh;
 }
 

@@ -224,7 +224,7 @@ onMounted(async () => {
 <style scoped>
 .page {
   width: 100%;
-  background: #f5f6f8;
+  background: #faf7f2;
 }
 
 .container {

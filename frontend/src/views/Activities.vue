@@ -50,7 +50,7 @@ onMounted(load)
 <style scoped>
 .page {
   padding: 32px 20px 56px;
-  background: linear-gradient(180deg, #fff8f1 0%, #ffffff 18%);
+  background: #faf7f2;
 }
 
 .container {
