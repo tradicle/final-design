@@ -6,6 +6,7 @@ import { uploadFile } from '../api/file'
 import type { UploadRequestOptions } from 'element-plus'
 import { Location, Search } from '@element-plus/icons-vue'
 import { getAssetUrl } from '../utils/assets'
+import RichTextEditor from '../components/RichTextEditor.vue'
 
 interface LandmarkCandidate {
   title: string
@@ -78,22 +79,9 @@ function resetForm() {
   mapStatus.value = null
   form.isSterilized = false
   form.status = 1
+  form.updateTime = undefined
 }
 
-function htmlToPlainText(content?: string) {
-  const value = (content || '').trim()
-  if (!value) return ''
-  return value
-    .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<\/p>\s*<p>/gi, '\n\n')
-    .replace(/<\/?p[^>]*>/gi, '')
-    .replace(/<[^>]+>/g, '')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&amp;/g, '&')
-    .trim()
-}
 
 function escapeHtml(value: string) {
   return value
@@ -122,7 +110,7 @@ function fillForm(row: Animal) {
   form.bodySize = row.bodySize
   form.avatar = row.avatar
   form.description = row.description
-  form.detailContent = htmlToPlainText(row.detailContent)
+  form.detailContent = row.detailContent || ''
   form.activityScope = row.activityScope
   form.location = row.location
   form.latitude = row.latitude
@@ -132,6 +120,7 @@ function fillForm(row: Animal) {
   showCandidatePanel.value = false
   form.isSterilized = row.isSterilized
   form.status = row.status
+  form.updateTime = row.updateTime
 }
 
 async function load() {
@@ -523,6 +512,14 @@ onBeforeUnmount(() => {
         <div class="animal-info">
           <h3>{{ row.name }}</h3>
           <p>{{ row.category === 'CAT' ? '猫咪' : '狗狗' }} · {{ row.age }}岁</p>
+          <div class="tags">
+            <el-tag size="small" :type="row.sex === 'FEMALE' ? 'danger' : 'primary'">
+              {{ row.sex === 'FEMALE' ? '女' : '男' }}
+            </el-tag>
+            <el-tag size="small" type="info">
+              {{ row.bodySize === 'SMALL' ? '小型' : row.bodySize === 'LARGE' ? '大型' : '中型' }}
+            </el-tag>
+          </div>
           <div class="actions">
             <el-button size="small" @click.stop="openEdit(row)">编辑</el-button>
             <el-button size="small" type="danger" @click.stop="remove(row.id)">删除</el-button>
@@ -612,7 +609,14 @@ onBeforeUnmount(() => {
         </div>
       </div>
       <el-input v-model="form.description" type="textarea" :rows="3" placeholder="简短描述" />
-      <el-input v-model="form.detailContent" type="textarea" :rows="6" placeholder="详情内容，直接输入普通文本即可" />
+      <div class="editor-field">
+        <label class="field-label">详情内容</label>
+        <RichTextEditor :model-value="form.detailContent || ''" @update:model-value="form.detailContent = $event" />
+      </div>
+      <div v-if="editingId && form.updateTime" class="update-time-row">
+        <span class="update-time-label">最后更新：</span>
+        <span>{{ form.updateTime?.replace('T', ' ') }}</span>
+      </div>
     </div>
 
     <template #footer>
@@ -689,6 +693,11 @@ onBeforeUnmount(() => {
   display: flex;
   gap: 8px;
 }
+.tags {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 6px;
+}
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -705,6 +714,24 @@ onBeforeUnmount(() => {
 }
 .edit-dialog :deep(.el-dialog__footer) {
   padding-top: 8px;
+}
+.editor-field {
+  grid-column: 1 / -1;
+}
+.field-label {
+  display: block;
+  font-size: 13px;
+  color: #909399;
+  margin-bottom: 6px;
+}
+.update-time-row {
+  grid-column: 1 / -1;
+  font-size: 13px;
+  color: #909399;
+  padding-top: 4px;
+}
+.update-time-label {
+  margin-right: 4px;
 }
 .upload-row {
   grid-column: 1 / -1;
