@@ -63,7 +63,30 @@ onMounted(async () => {
 
 <template>
   <div class="page">
-    <section class="hero-section">
+    <section class="hero-banner">
+      <div class="hero-overlay">
+        <div class="container hero-stats-row">
+          <div class="hero-stat-card">
+            <div class="hero-stat-number">{{ summary.totalRescueCount }}</div>
+            <div class="hero-stat-label">累计救助</div>
+          </div>
+          <div class="hero-stat-card">
+            <div class="hero-stat-number">{{ summary.adoptionSuccessCount }}</div>
+            <div class="hero-stat-label">成功领养</div>
+          </div>
+          <div class="hero-stat-card">
+            <div class="hero-stat-number">{{ summary.activeAnimals }}</div>
+            <div class="hero-stat-label">当前待领养</div>
+          </div>
+          <div class="hero-stat-card">
+            <div class="hero-stat-number">&yen;{{ summary.monthlyPublicBudget }}</div>
+            <div class="hero-stat-label">月度公开支出</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="news-section">
       <div class="container hero-grid">
         <el-card class="news-window" shadow="never">
           <template #header>
@@ -94,33 +117,12 @@ onMounted(async () => {
             <p>我们领养之家最初是几个喜欢小动物的朋友共同发起，长期致力于流浪猫狗的救助、护理和领养安置。</p>
             <p>申请领养需年满21岁，具备稳定住所和基本经济能力，愿意接受回访并承诺科学喂养与定期免疫。</p>
             <p>为保障动物安全，领养前需做好窗户、阳台等防护措施，避免坠楼和走失风险。</p>
-            <p>更多流程和细则，请先阅读“领养须知”，确认后再进入“领养申请”页面提交资料。</p>
+            <p>更多流程和细则，请先阅读"领养须知"，确认后再进入"领养申请"页面提交资料。</p>
             <el-button type="primary" size="large" class="notice-btn" @click="go('/adoption/rules')">
               进入领养须知
             </el-button>
           </div>
         </el-card>
-      </div>
-    </section>
-
-    <section class="stats-section">
-      <div class="container stats-grid">
-        <div class="stat-card">
-          <div class="stat-number">{{ summary.totalRescueCount }}</div>
-          <div class="stat-label">累计救助</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number">{{ summary.adoptionSuccessCount }}</div>
-          <div class="stat-label">成功领养</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number">{{ summary.activeAnimals }}</div>
-          <div class="stat-label">当前待领养</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number">{{ summary.monthlyPublicBudget }}元</div>
-          <div class="stat-label">月度公开支出</div>
-        </div>
       </div>
     </section>
 
@@ -179,7 +181,7 @@ onMounted(async () => {
           <el-card class="knowledge-card about-card" shadow="never">
             <h3>关于我们</h3>
             <p>我们领养之家最初由几位热爱小动物的朋友发起，长期专注流浪猫狗救助、寄养、医疗和领养安置。</p>
-            <p>我们坚持科学救助和规范回访，持续推动“领养代替购买”，帮助更多毛孩子获得稳定、温暖的新家。</p>
+            <p>我们坚持科学救助和规范回访，持续推动"领养代替购买"，帮助更多毛孩子获得稳定、温暖的新家。</p>
           </el-card>
         </div>
       </div>
@@ -231,7 +233,54 @@ onMounted(async () => {
   padding: 0 28px;
 }
 
-.hero-section {
+.hero-banner {
+  width: 100%;
+  height: 66vh;
+  min-height: 420px;
+  background: url('/hero-bg.png') center/cover no-repeat;
+  position: relative;
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 56px;
+}
+
+.hero-stats-row {
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.hero-stat-card {
+  background: rgba(255, 255, 255, 0.88);
+  border-radius: 14px;
+  padding: 28px 42px;
+  text-align: center;
+  min-width: 150px;
+  backdrop-filter: blur(6px);
+}
+
+.hero-stat-number {
+  font-size: 38px;
+  font-weight: 700;
+  color: #1f2937;
+  white-space: nowrap;
+}
+
+.hero-stat-label {
+  font-size: 14px;
+  color: #6b7280;
+  margin-top: 6px;
+}
+
+.news-section {
   padding: 40px 0 26px;
 }
 
@@ -432,36 +481,6 @@ onMounted(async () => {
   margin-bottom: 10px;
 }
 
-.stats-section {
-  padding: 0 0 30px;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-}
-
-.stat-card {
-  text-align: center;
-  padding: 24px 16px;
-  background: #fff;
-  border: 1px solid #e8edf3;
-  border-radius: 0;
-}
-
-.stat-number {
-  font-size: 28px;
-  font-weight: 700;
-  color: #5a3e2d;
-}
-
-.stat-label {
-  font-size: 14px;
-  color: #8b7a6b;
-  margin-top: 6px;
-}
-
 .weekly-section {
   padding: 10px 0 40px;
 }
@@ -547,6 +566,16 @@ onMounted(async () => {
 }
 
 @media (max-width: 1024px) {
+  .hero-stats-row {
+    gap: 16px;
+  }
+  .hero-stat-card {
+    padding: 20px 24px;
+    min-width: 120px;
+  }
+  .hero-stat-number {
+    font-size: 28px;
+  }
   .hero-grid {
     grid-template-columns: 1fr;
   }
@@ -558,6 +587,27 @@ onMounted(async () => {
 @media (max-width: 768px) {
   .container {
     padding: 0 14px;
+  }
+  .hero-banner {
+    height: 50vh;
+    min-height: 320px;
+  }
+  .hero-overlay {
+    padding-bottom: 32px;
+  }
+  .hero-stats-row {
+    gap: 10px;
+  }
+  .hero-stat-card {
+    padding: 16px 14px;
+    min-width: 70px;
+    border-radius: 10px;
+  }
+  .hero-stat-number {
+    font-size: 24px;
+  }
+  .hero-stat-label {
+    font-size: 12px;
   }
   .animal-grid,
   .knowledge-grid {
