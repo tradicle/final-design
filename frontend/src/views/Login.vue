@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
 import { login } from '../api/user'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '../store/user'
 import { ElMessage } from 'element-plus'
 
 const router = useRouter()
+const route = useRoute()
 const userStore = useUserStore()
 const loading = ref(false)
 const form = reactive({
@@ -20,8 +21,19 @@ async function onSubmit() {
     if (res.code === 0) {
       userStore.login(res.data)
       ElMessage.success('登录成功')
-      const targetPath = res.data?.role === 'ADMIN' ? '/admin/dashboard' : '/'
-      router.push(targetPath)
+      const isAdmin = res.data?.role === 'ADMIN'
+      // ADMIN always goes to admin dashboard
+      if (isAdmin) {
+        router.push('/admin/dashboard')
+      } else {
+        const redirect = route.query.redirect
+        // validate redirect is a safe internal path
+        if (typeof redirect === 'string' && redirect.startsWith('/') && !redirect.startsWith('//')) {
+          router.push(redirect)
+        } else {
+          router.push('/')
+        }
+      }
     } else {
       ElMessage.error(res.message || '登录失败')
     }

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { useRouter } from 'vue-router'
 import { getPostList, createPost, createComment, type Post } from '../api/community'
 import { uploadFile } from '../api/file'
 import { useUserStore } from '../store/user'
@@ -8,6 +9,8 @@ import type { UploadRequestOptions } from 'element-plus'
 import { Plus, Location, Search, ChatDotRound } from '@element-plus/icons-vue'
 import { getAssetUrl } from '../utils/assets'
 import { relativeTime } from '../utils/time'
+
+const router = useRouter()
 
 interface LandmarkCandidate {
   title: string
@@ -114,7 +117,7 @@ function removePostImage(idx: number) {
 
 async function handlePost() {
   if (!userStore.user) {
-    ElMessage.warning('请先登录')
+    router.push('/login?redirect=/community')
     return
   }
   if (!form.title || !form.content) {
@@ -212,7 +215,7 @@ function toggleExpand(postId: number) {
 
 async function handleReply(post: Post) {
   if (!userStore.user) {
-    ElMessage.warning('请先登录')
+    router.push('/login?redirect=/community')
     return
   }
   if (!post.id) return
@@ -550,7 +553,7 @@ function initMap() {
 
 function openDialog() {
   if (!userStore.user) {
-    ElMessage.warning('请先登录')
+    router.push('/login?redirect=/community')
     return
   }
   dialogVisible.value = true

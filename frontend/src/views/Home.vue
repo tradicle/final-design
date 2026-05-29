@@ -168,18 +168,31 @@ onMounted(async () => {
 
     <section class="knowledge-section">
       <div class="container">
-        <div class="section-header">
-          <h2>小常识</h2>
-        </div>
         <div class="knowledge-grid">
-          <el-card class="knowledge-card" shadow="never">
-            <h3>小常识</h3>
+          <el-card class="knowledge-card clickable-card" shadow="never" @click="go('/knowledge')">
+            <template #header>
+              <div class="block-header">
+                <h3>小常识</h3>
+                <el-button link @click.stop="go('/knowledge')">
+                  查看全部
+                  <el-icon><ArrowRight /></el-icon>
+                </el-button>
+              </div>
+            </template>
             <p>1. 猫不用遛。遛狗是为了它的健康，顺便解决下大小便。猫不用遛，让它自己呆着就舒服了。</p>
             <p>2. 小猫不要喂牛奶。部分猫天生乳糖不耐，喂了牛奶会拉稀。</p>
             <p>3. 猫咪洗澡之后一定要彻底吹干。贴身的绒毛极不容易吹干，频率最多一个月一次。</p>
           </el-card>
-          <el-card class="knowledge-card about-card" shadow="never">
-            <h3>关于我们</h3>
+          <el-card class="knowledge-card about-card clickable-card" shadow="never" @click="go('/about')">
+            <template #header>
+              <div class="block-header">
+                <h3>关于我们</h3>
+                <el-button link @click.stop="go('/about')">
+                  了解详情
+                  <el-icon><ArrowRight /></el-icon>
+                </el-button>
+              </div>
+            </template>
             <p>我们领养之家最初由几位热爱小动物的朋友发起，长期专注流浪猫狗救助、寄养、医疗和领养安置。</p>
             <p>我们坚持科学救助和规范回访，持续推动"领养代替购买"，帮助更多毛孩子获得稳定、温暖的新家。</p>
           </el-card>
@@ -299,7 +312,7 @@ onMounted(async () => {
 }
 
 .notice-window {
-  background: #f1f3f5;
+  background: #f5efe6;
 }
 
 .block-header {
@@ -464,11 +477,15 @@ onMounted(async () => {
 .knowledge-card {
   border: 1px solid #e8edf3;
   border-radius: 14px;
-  background: #f1f3f5;
+  background: #f5efe6;
+}
+
+.knowledge-card :deep(.el-card__header) {
+  padding: 18px 20px 14px;
 }
 
 .knowledge-card h3 {
-  margin: 0 0 10px;
+  margin: 0;
   color: #1f2937;
   font-size: 18px;
 }
@@ -481,6 +498,20 @@ onMounted(async () => {
 
 .about-card p {
   margin-bottom: 10px;
+}
+
+.clickable-card {
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.clickable-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 32px rgba(17, 24, 39, 0.14);
+}
+
+.clickable-card:active {
+  transform: translateY(0) scale(0.97);
 }
 
 .weekly-section {

@@ -47,7 +47,7 @@ export const router = createRouter({
     { path: '/adoption/apply', component: AdoptionApply, meta: { requiresAuth: true } },
     { path: '/about', component: About },
     { path: '/donate', component: Donate },
-    { path: '/community', component: Community, meta: { requiresAuth: true } },
+    { path: '/community', component: Community },
     {
       path: '/knowledge',
       component: Knowledge,
@@ -81,7 +81,7 @@ router.beforeEach((to, _from, next) => {
   const user = userStr ? JSON.parse(userStr) : null
 
   if (to.meta.requiresAuth && !user) {
-    next('/login')
+    next('/login?redirect=' + encodeURIComponent(to.fullPath))
     return
   }
   if (to.meta.requiresAdmin && user?.role !== 'ADMIN') {
