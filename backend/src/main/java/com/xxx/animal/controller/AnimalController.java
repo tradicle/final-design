@@ -82,7 +82,15 @@ public class AnimalController {
             wrapper.eq(Animal::getStatus, status);
         }
         wrapper.orderByDesc(Animal::getUpdateTime);
-        Page<Animal> pageResult = animalService.page(new Page<>(page, pageSize), wrapper);
-        return Result.ok(Map.of("records", pageResult.getRecords(), "total", pageResult.getTotal()));
+        long total = animalService.count(wrapper);
+        List<Animal> records;
+        if (total > 0) {
+            int offset = (page - 1) * pageSize;
+            wrapper.last("LIMIT " + offset + "," + pageSize);
+            records = animalService.list(wrapper);
+        } else {
+            records = List.of();
+        }
+        return Result.ok(Map.of("records", records, "total", total));
     }
 }
