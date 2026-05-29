@@ -112,10 +112,10 @@ async function updatePostStatus(id: number, status: number) {
 async function updateCommentStatus(id: number, status: number) {
   const res = await setCommentStatus(id, status)
   if (res.code === 0) {
-    ElMessage.success(status === 1 ? '评论已通过' : '评论已隐藏')
+    ElMessage.success(status === 1 ? '回复已通过' : '回复已隐藏')
     await load()
   } else {
-    ElMessage.error(res.message || '评论状态更新失败')
+    ElMessage.error(res.message || '回复状态更新失败')
   }
 }
 
@@ -133,11 +133,11 @@ async function removePost(id: number) {
 async function removeComment(id: number) {
   const res = await deleteComment(id)
   if (res.code === 0) {
-    ElMessage.success('评论已删除')
+    ElMessage.success('回复已删除')
     commentDetailVisible.value = false
     await load()
   } else {
-    ElMessage.error(res.message || '评论删除失败')
+    ElMessage.error(res.message || '回复删除失败')
   }
 }
 
@@ -148,7 +148,7 @@ onMounted(load)
   <el-card shadow="never" v-loading="loading" class="community-review-card">
     <template #header>
       <div class="header-bar">
-        <span>社区审核（帖子 / 评论）</span>
+        <span>社区审核（帖子 / 回复）</span>
         <el-button text type="primary" @click="load">刷新</el-button>
       </div>
     </template>
@@ -199,10 +199,10 @@ onMounted(load)
         </el-table>
       </el-tab-pane>
 
-      <el-tab-pane :label="`评论审核（${comments.length}）`">
+      <el-tab-pane :label="`回复审核（${comments.length}）`">
         <el-table :data="comments" stripe>
           <el-table-column prop="postTitle" label="所属帖子" min-width="200" show-overflow-tooltip />
-          <el-table-column prop="username" label="评论人" width="120">
+          <el-table-column prop="username" label="回复人" width="120">
             <template #default="{ row }">
               {{ displayName(row.nickname, row.username) }}
             </template>
@@ -212,7 +212,7 @@ onMounted(load)
               <el-tag :type="getStatusType(row.status)">{{ getStatusText(row.status) }}</el-tag>
             </template>
           </el-table-column>
-          <el-table-column label="评论内容" min-width="260" show-overflow-tooltip>
+          <el-table-column label="回复内容" min-width="260" show-overflow-tooltip>
             <template #default="{ row }">
               {{ previewText(row.content, 60) }}
             </template>
@@ -284,7 +284,7 @@ onMounted(load)
           </div>
           <span v-else>-</span>
         </el-descriptions-item>
-        <el-descriptions-item :label="`评论明细（${selectedPost.comments?.length || 0}）`">
+        <el-descriptions-item :label="`回复明细（${selectedPost.comments?.length || 0}）`">
           <div v-if="selectedPost.comments?.length" class="comment-detail-list">
             <div v-for="comment in selectedPost.comments" :key="comment.id" class="comment-detail-item">
               <div class="comment-detail-head">
@@ -293,7 +293,7 @@ onMounted(load)
               </div>
               <div class="comment-detail-meta">
                 <span>时间：{{ formatTime(comment.createTime) }}</span>
-                <span>父评论 ID：{{ comment.parentId ?? '-' }}</span>
+                <span>父回复 ID：{{ comment.parentId ?? '-' }}</span>
               </div>
               <div class="multiline-text">{{ comment.content || '-' }}</div>
               <div v-if="comment.image" class="comment-image-line">
@@ -302,13 +302,13 @@ onMounted(load)
               </div>
             </div>
           </div>
-          <span v-else>暂无评论</span>
+          <span v-else>暂无回复</span>
         </el-descriptions-item>
       </el-descriptions>
     </div>
   </el-drawer>
 
-  <el-drawer v-model="commentDetailVisible" size="640px" title="评论详情">
+  <el-drawer v-model="commentDetailVisible" size="640px" title="回复详情">
     <div v-if="selectedComment" class="detail-panel">
       <div class="detail-actions">
         <el-tag :type="getStatusType(selectedComment.status)">{{ getStatusText(selectedComment.status) }}</el-tag>
@@ -318,22 +318,22 @@ onMounted(load)
             plain
             @click="updateCommentStatus(selectedComment.id!, selectedComment.status === 1 ? 0 : 1)"
           >
-            {{ selectedComment.status === 1 ? '隐藏评论' : '通过评论' }}
+            {{ selectedComment.status === 1 ? '隐藏回复' : '通过回复' }}
           </el-button>
-          <el-button type="danger" @click="removeComment(selectedComment.id!)">删除评论</el-button>
+          <el-button type="danger" @click="removeComment(selectedComment.id!)">删除回复</el-button>
         </div>
       </div>
 
       <el-descriptions :column="1" border>
         <el-descriptions-item label="所属帖子">{{ selectedComment.postTitle }}</el-descriptions-item>
         <el-descriptions-item label="帖子作者">{{ selectedComment.postAuthor }}</el-descriptions-item>
-        <el-descriptions-item label="评论人">{{ displayName(selectedComment.nickname, selectedComment.username) }}</el-descriptions-item>
+        <el-descriptions-item label="回复人">{{ displayName(selectedComment.nickname, selectedComment.username) }}</el-descriptions-item>
         <el-descriptions-item label="发布时间">{{ formatTime(selectedComment.createTime) }}</el-descriptions-item>
-        <el-descriptions-item label="父评论 ID">{{ selectedComment.parentId ?? '-' }}</el-descriptions-item>
-        <el-descriptions-item label="父评论内容">
+        <el-descriptions-item label="父回复 ID">{{ selectedComment.parentId ?? '-' }}</el-descriptions-item>
+        <el-descriptions-item label="父回复内容">
           <div class="multiline-text">{{ selectedComment.parentContent || '-' }}</div>
         </el-descriptions-item>
-        <el-descriptions-item label="评论内容">
+        <el-descriptions-item label="回复内容">
           <div class="multiline-text">{{ selectedComment.content || '-' }}</div>
         </el-descriptions-item>
         <el-descriptions-item label="图片地址">

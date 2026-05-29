@@ -5,8 +5,9 @@ import { uploadFile } from '../api/file'
 import { useUserStore } from '../store/user'
 import { ElMessage } from 'element-plus'
 import type { UploadRequestOptions } from 'element-plus'
-import { Plus, Location, Search } from '@element-plus/icons-vue'
+import { Plus, Location, Search, ChatDotRound } from '@element-plus/icons-vue'
 import { getAssetUrl } from '../utils/assets'
+import { relativeTime } from '../utils/time'
 
 interface LandmarkCandidate {
   title: string
@@ -16,18 +17,18 @@ interface LandmarkCandidate {
   distance: number
 }
 
-interface CommentDraft {
-  content: string
-  image: string
-  parentId?: number
-  replyToName?: string
-}
-
 const userStore = useUserStore()
 const posts = ref<Post[]>([])
 const loading = ref(false)
 const dialogVisible = ref(false)
 const submitLoading = ref(false)
+
+const expandedPosts = ref(new Set<number>())
+const showAllReplies = ref(new Set<number>())
+const replyDrafts = reactive<Record<number, { content: string; image: string }>>({})
+const dialogLayout = ref<'4:3' | '3:4'>('4:3')
+const replyLayouts = reactive<Record<number, '4:3' | '3:4'>>({})
+const postLayouts = reactive<Record<number, '4:3' | '3:4'>>({})
 
 let map: any = null
 let mapMarker: any = null
@@ -46,7 +47,20 @@ const form = reactive({
   latitude: 39.915,
   longitude: 116.404
 })
-const commentDrafts = reactive<Record<number, CommentDraft>>({})
+
+function getImageDimensions(file: File): Promise<{ width: number; height: number }> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const img = new Image()
+      img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight })
+      img.onerror = reject
+      img.src = e.target?.result as string
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+}
 
 async function load() {
   loading.value = true
@@ -54,6 +68,15 @@ async function load() {
     const res = await getPostList()
     if (res.code === 0) {
       posts.value = res.data
+      for (const post of posts.value) {
+        if (!post.id) continue
+        if (!(post.id in postLayouts)) {
+          postLayouts[post.id] = '4:3'
+        }
+        if (!(post.id in replyLayouts)) {
+          replyLayouts[post.id] = '4:3'
+        }
+      }
     }
   } finally {
     loading.value = false
@@ -61,8 +84,17 @@ async function load() {
 }
 
 async function customUpload(options: UploadRequestOptions) {
+  if (form.images.length >= 3) {
+    ElMessage.warning('最多上传3张图片')
+    return
+  }
   try {
-    const res = await uploadFile(options.file)
+    const file = options.file as File
+    if (form.images.length === 0) {
+      const dims = await getImageDimensions(file)
+      dialogLayout.value = dims.width >= dims.height ? '4:3' : '3:4'
+    }
+    const res = await uploadFile(file)
     if (res.code === 0) {
       form.images.push(res.data)
     } else {
@@ -70,6 +102,13 @@ async function customUpload(options: UploadRequestOptions) {
     }
   } catch (e) {
     ElMessage.error('上传异常')
+  }
+}
+
+function removePostImage(idx: number) {
+  form.images.splice(idx, 1)
+  if (form.images.length === 0) {
+    dialogLayout.value = '4:3'
   }
 }
 
@@ -108,94 +147,99 @@ async function handlePost() {
   }
 }
 
-function ensureCommentDraft(postId: number): CommentDraft {
-  if (!commentDrafts[postId]) {
-    commentDrafts[postId] = { content: '', image: '', parentId: undefined, replyToName: '' }
+function ensureReplyDraft(postId: number) {
+  if (!replyDrafts[postId]) {
+    replyDrafts[postId] = { content: '', image: '' }
   }
-  return commentDrafts[postId]
+  return replyDrafts[postId]
 }
 
-function startReply(post: Post, username: string, parentId?: number) {
-  if (!post.id) return
-  const draft = ensureCommentDraft(post.id)
-  draft.parentId = parentId
-  draft.replyToName = username
-}
-
-function clearReply(postId: number) {
-  const draft = ensureCommentDraft(postId)
-  draft.parentId = undefined
-  draft.replyToName = ''
-}
-
-async function uploadCommentImage(postId: number, options: UploadRequestOptions) {
-  const draft = ensureCommentDraft(postId)
+async function uploadReplyImage(postId: number, options: UploadRequestOptions) {
+  const draft = ensureReplyDraft(postId)
   try {
-    const res = await uploadFile(options.file)
+    const file = options.file as File
+    const dims = await getImageDimensions(file)
+    replyLayouts[postId] = dims.width >= dims.height ? '4:3' : '3:4'
+    const res = await uploadFile(file)
     if (res.code === 0) {
       draft.image = res.data
     } else {
-      ElMessage.error(res.message || '评论图片上传失败')
+      ElMessage.error(res.message || '上传失败')
     }
   } catch (e) {
-    ElMessage.error('评论图片上传异常')
+    ElMessage.error('上传异常')
   }
 }
 
-function commentUploadRequest(postId: number) {
-  return (options: UploadRequestOptions) => uploadCommentImage(postId, options)
+function replyUploadRequest(postId: number) {
+  return (options: UploadRequestOptions) => uploadReplyImage(postId, options)
 }
 
-function topLevelComments(post: Post) {
-  return (post.comments || []).filter((item) => !item.parentId)
+function sortedReplies(post: Post) {
+  return (post.comments || []).slice().sort((a, b) =>
+    new Date(b.createTime || 0).getTime() - new Date(a.createTime || 0).getTime()
+  )
 }
 
-function childComments(post: Post, parentId: number | undefined) {
-  if (!parentId) return []
-  return (post.comments || []).filter((item) => item.parentId === parentId)
+function replyCount(post: Post) {
+  return (post.comments || []).length
 }
 
-function formatCommentTime(time?: string) {
-  if (!time) return ''
-  return time.replace('T', ' ')
+function visibleReplies(post: Post) {
+  const replies = sortedReplies(post)
+  if (!post.id) return replies
+  if (showAllReplies.value.has(post.id)) return replies
+  return replies.slice(0, 2)
 }
 
-function commentAvatar(avatar?: string) {
-  return getAssetUrl(avatar) || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
+function hasMoreReplies(post: Post) {
+  return post.id && sortedReplies(post).length > 2 && !showAllReplies.value.has(post.id)
 }
 
-async function handleComment(post: Post) {
+function showAll(post: Post) {
+  if (post.id) showAllReplies.value.add(post.id)
+}
+
+function toggleExpand(postId: number) {
+  if (expandedPosts.value.has(postId)) {
+    expandedPosts.value.delete(postId)
+    showAllReplies.value.delete(postId)
+    delete replyDrafts[postId]
+  } else {
+    expandedPosts.value.add(postId)
+  }
+}
+
+async function handleReply(post: Post) {
   if (!userStore.user) {
     ElMessage.warning('请先登录')
     return
   }
   if (!post.id) return
-  const draft = ensureCommentDraft(post.id)
+  const draft = ensureReplyDraft(post.id)
   if (!draft.content && !draft.image) {
-    ElMessage.warning('请填写评论内容或上传图片')
+    ElMessage.warning('请填写回复内容或上传图片')
     return
   }
-  
   try {
     const res = await createComment({
       postId: post.id,
       userId: userStore.user.id,
       content: draft.content,
       image: draft.image,
-      parentId: draft.parentId
+      parentId: undefined
     })
     if (res.code === 0) {
-      ElMessage.success('评论成功')
+      ElMessage.success('回复成功')
       draft.content = ''
       draft.image = ''
-      draft.parentId = undefined
-      draft.replyToName = ''
+      if (post.id) delete replyLayouts[post.id]
       load()
     } else {
-      ElMessage.error(res.message || '评论失败')
+      ElMessage.error(res.message || '回复失败')
     }
   } catch (e) {
-    ElMessage.error('评论异常')
+    ElMessage.error('回复异常')
   }
 }
 
@@ -209,6 +253,7 @@ function resetForm() {
   mapSearchKeyword.value = ''
   landmarkCandidates.value = []
   showCandidatePanel.value = false
+  dialogLayout.value = '4:3'
 }
 
 function getImages(json: string | undefined): string[] {
@@ -218,6 +263,34 @@ function getImages(json: string | undefined): string[] {
   } catch {
     return []
   }
+}
+
+function onPostImgLoad(post: Post, event: Event) {
+  if (!post.id) return
+  if (post.id in postLayouts) return
+  const img = event.target as HTMLImageElement
+  if (img.naturalWidth && img.naturalHeight) {
+    postLayouts[post.id] = img.naturalWidth >= img.naturalHeight ? '4:3' : '3:4'
+  }
+}
+
+const dialogPreviewStyle = {
+  '4:3': { width: '160px', height: '120px' },
+  '3:4': { width: '120px', height: '160px' }
+}
+
+function postImgStyle(post: Post) {
+  const layout = (post.id && postLayouts[post.id]) || '4:3'
+  return layout === '4:3'
+    ? { width: '160px', height: '120px' }
+    : { width: '120px', height: '160px' }
+}
+
+function replyImgStyle(postId: number) {
+  const layout = replyLayouts[postId] || '4:3'
+  return layout === '4:3'
+    ? { width: '160px', height: '120px' }
+    : { width: '120px', height: '160px' }
 }
 
 function buildPreciseLocation(point: any, result: any) {
@@ -468,9 +541,7 @@ function initMap() {
     const point = new BMap.Point(form.longitude, form.latitude)
     map.centerAndZoom(point, 15)
     map.enableScrollWheelZoom(true)
-    
     placeMapMarker(form.longitude, form.latitude, true)
-
     map.addEventListener('click', function(e: any) {
       placeMapMarker(e.point.lng, e.point.lat, false)
     })
@@ -506,100 +577,98 @@ onBeforeUnmount(() => {
       <el-skeleton :rows="3" animated />
     </div>
 
-    <div v-else class="post-list">
-      <el-card v-for="post in posts" :key="post.id" class="post-card">
-        <div class="post-header">
-          <img :src="getAssetUrl(post.avatar) || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'" class="avatar" />
-          <div class="user-info">
-            <span class="username">{{ post.username || '匿名用户' }}</span>
-            <span class="time">{{ post.createTime?.replace('T', ' ') }}</span>
+    <div v-else class="post-list-container">
+      <template v-for="(post, pIdx) in posts" :key="post.id">
+        <div class="post-item">
+          <div class="post-header">
+            <img :src="post.avatar || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'" class="post-avatar" />
+            <span class="post-username">{{ post.username || '匿名用户' }}</span>
           </div>
-        </div>
-        
-        <div class="post-content">
-          <h3>{{ post.title }}</h3>
-          <p>{{ post.content }}</p>
-          
+
+          <h3 class="post-title">{{ post.title }}</h3>
+          <p class="post-body">{{ post.content }}</p>
+
           <div class="post-images" v-if="getImages(post.images).length">
-            <el-image 
-              v-for="(img, idx) in getImages(post.images)" 
-              :key="idx" 
-              :src="getAssetUrl(img)" 
-              :preview-src-list="getImages(post.images).map(getAssetUrl)"
+            <img
+              v-for="(img, idx) in getImages(post.images)"
+              :key="idx"
+              :src="getAssetUrl(img)"
+              :style="postImgStyle(post)"
               class="post-img"
+              @load="(e: Event) => onPostImgLoad(post, e)"
             />
           </div>
-          
+
           <div class="post-location" v-if="post.location">
             <el-icon><Location /></el-icon> {{ post.location }}
           </div>
-        </div>
 
-        <div class="post-footer">
-          <div class="comments-section">
-            <div class="comment-list" v-if="post.comments && post.comments.length">
-              <div class="comment-item" v-for="comment in topLevelComments(post)" :key="comment.id">
-                <div class="comment-meta">
-                  <img :src="commentAvatar(comment.avatar)" class="comment-avatar" />
-                  <div class="comment-meta-text">
-                    <span class="comment-user">{{ comment.username || '匿名用户' }}</span>
-                    <span class="comment-time">{{ formatCommentTime(comment.createTime) }}</span>
+          <div class="post-time">{{ relativeTime(post.createTime) }}</div>
+
+          <div class="reply-toggle" @click="post.id && toggleExpand(post.id)">
+            <el-icon><ChatDotRound /></el-icon>
+            <span>回复 ({{ replyCount(post) }})</span>
+          </div>
+
+          <div class="reply-section" v-if="post.id && expandedPosts.has(post.id)">
+            <div class="reply-list" v-if="sortedReplies(post).length">
+              <div class="reply-item" v-for="reply in visibleReplies(post)" :key="reply.id">
+                <img
+                  :src="reply.avatar || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'"
+                  class="reply-avatar"
+                />
+                <div class="reply-content-area">
+                  <div class="reply-meta">
+                    <span class="reply-username">{{ reply.username || '匿名用户' }}</span>
+                    <span class="reply-time">{{ relativeTime(reply.createTime) }}</span>
                   </div>
-                </div>
-                <div class="comment-main">
-                  <span class="comment-content">{{ comment.content }}</span>
-                </div>
-                <el-image v-if="comment.image" :src="getAssetUrl(comment.image)" class="comment-image" :preview-src-list="[getAssetUrl(comment.image)]" />
-                <div class="comment-actions">
-                  <el-button text size="small" @click="startReply(post, comment.username || '用户', comment.id)">回复</el-button>
-                </div>
-                <div class="comment-replies" v-if="childComments(post, comment.id).length">
-                  <div class="comment-item child" v-for="child in childComments(post, comment.id)" :key="child.id">
-                    <div class="comment-meta">
-                      <img :src="commentAvatar(child.avatar)" class="comment-avatar" />
-                      <div class="comment-meta-text">
-                        <span class="comment-user">{{ child.username || '匿名用户' }}</span>
-                        <span class="comment-time">{{ formatCommentTime(child.createTime) }}</span>
-                      </div>
-                    </div>
-                    <div class="comment-main">
-                      <span class="comment-content">{{ child.content }}</span>
-                    </div>
-                    <el-image v-if="child.image" :src="getAssetUrl(child.image)" class="comment-image" :preview-src-list="[getAssetUrl(child.image)]" />
-                  </div>
+                  <div class="reply-text">{{ reply.content }}</div>
+                  <img
+                    v-if="reply.image"
+                    :src="getAssetUrl(reply.image)"
+                    :style="replyImgStyle(post.id)"
+                    class="reply-img"
+                  />
                 </div>
               </div>
             </div>
-            
-            <div class="reply-box">
-              <div class="reply-target" v-if="post.id && ensureCommentDraft(post.id).replyToName">
-                正在回复 {{ ensureCommentDraft(post.id).replyToName }}
-                <el-button text size="small" @click="clearReply(post.id)">取消</el-button>
-              </div>
-              <el-input 
-                v-if="post.id"
-                v-model="ensureCommentDraft(post.id).content" 
-                placeholder="写下你的评论..." 
-                size="small"
-                type="textarea"
-                :rows="2"
-              />
-              <div class="reply-tools" v-if="post.id">
-                <el-upload action="" :show-file-list="false" :http-request="commentUploadRequest(post.id)">
-                  <el-button size="small">上传评论图片</el-button>
-                </el-upload>
-                <el-image
-                  v-if="ensureCommentDraft(post.id).image"
-                  :src="getAssetUrl(ensureCommentDraft(post.id).image)"
-                  class="comment-upload-preview"
-                  :preview-src-list="[getAssetUrl(ensureCommentDraft(post.id).image)]"
+
+            <div class="show-more-wrap" v-if="hasMoreReplies(post)">
+              <el-button text type="primary" @click="showAll(post)">
+                共{{ replyCount(post) }}条回复，点击查看
+              </el-button>
+            </div>
+
+            <div class="reply-input-area">
+              <div class="reply-input-row">
+                <el-input
+                  v-model="ensureReplyDraft(post.id).content"
+                  placeholder="写下你的回复..."
+                  type="textarea"
+                  :rows="2"
+                  class="reply-textarea"
                 />
-                <el-button type="primary" size="small" @click="handleComment(post)">发送</el-button>
+                <el-upload
+                  action=""
+                  :show-file-list="false"
+                  :http-request="replyUploadRequest(post.id)"
+                  class="reply-upload-btn"
+                >
+                  <el-button size="small">上传图片</el-button>
+                </el-upload>
+                <el-button type="primary" size="small" @click="handleReply(post)">发送</el-button>
               </div>
+              <img
+                v-if="ensureReplyDraft(post.id).image"
+                :src="getAssetUrl(ensureReplyDraft(post.id).image)"
+                :style="replyImgStyle(post.id)"
+                class="reply-upload-preview"
+              />
             </div>
           </div>
         </div>
-      </el-card>
+        <div v-if="pIdx < posts.length - 1" class="post-divider"></div>
+      </template>
     </div>
 
     <el-dialog v-model="dialogVisible" title="发布帖子" width="600px">
@@ -611,14 +680,29 @@ onBeforeUnmount(() => {
           <el-input v-model="form.content" type="textarea" :rows="4" placeholder="分享你的故事..." />
         </el-form-item>
         <el-form-item label="图片">
-          <el-upload
-            action=""
-            list-type="picture-card"
-            :http-request="customUpload"
-            :show-file-list="true"
-          >
-            <el-icon><Plus /></el-icon>
-          </el-upload>
+          <div class="upload-area">
+            <div
+              v-for="(img, idx) in form.images"
+              :key="idx"
+              class="upload-preview"
+              :style="dialogPreviewStyle[dialogLayout]"
+            >
+              <img :src="getAssetUrl(img)" class="upload-preview-img" />
+              <span class="upload-preview-remove" @click="removePostImage(idx)">&times;</span>
+            </div>
+            <el-upload
+              v-if="form.images.length < 3"
+              action=""
+              :show-file-list="false"
+              :http-request="customUpload"
+            >
+              <div class="upload-trigger" :style="dialogPreviewStyle[dialogLayout]">
+                <el-icon><Plus /></el-icon>
+                <span>上传图片</span>
+              </div>
+            </el-upload>
+          </div>
+          <div class="upload-hint">最多3张 ({{ form.images.length }}/3)</div>
         </el-form-item>
         <el-form-item label="位置">
           <div class="map-actions">
@@ -626,7 +710,7 @@ onBeforeUnmount(() => {
               <el-icon><Location /></el-icon>
               一键定位
             </el-button>
-            <el-input v-model="mapSearchKeyword" placeholder="输入地址关键字，如“人民公园”" @keyup.enter="searchAddressOnMap">
+            <el-input v-model="mapSearchKeyword" placeholder="输入地址关键字，如&ldquo;人民公园&rdquo;" @keyup.enter="searchAddressOnMap">
               <template #append>
                 <el-button @click="searchAddressOnMap">
                   <el-icon><Search /></el-icon>
@@ -682,63 +766,62 @@ onBeforeUnmount(() => {
   margin-bottom: 20px;
 }
 
-.post-list {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+.post-list-container {
+  background: #FFF8E7;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.post-item {
+  padding: 8px 0;
+}
+
+.post-divider {
+  height: 1px;
+  background: #e0d8c4;
+  margin: 12px 0;
 }
 
 .post-header {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
-.avatar {
+.post-avatar {
   width: 40px;
   height: 40px;
   border-radius: 50%;
   object-fit: cover;
 }
 
-.user-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.username {
+.post-username {
   font-weight: bold;
   font-size: 14px;
 }
 
-.time {
-  font-size: 12px;
-  color: #999;
-}
-
-.post-content h3 {
-  margin: 0 0 10px;
+.post-title {
+  margin: 0 0 8px;
   font-size: 18px;
 }
 
-.post-content p {
+.post-body {
   color: #333;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   line-height: 1.6;
 }
 
 .post-images {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .post-img {
-  width: 100px;
-  height: 100px;
   border-radius: 4px;
+  object-fit: cover;
 }
 
 .post-location {
@@ -747,97 +830,113 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   gap: 4px;
-  margin-bottom: 10px;
-}
-
-.comments-section {
-  background: #f9f9f9;
-  padding: 10px;
-  border-radius: 4px;
-}
-
-.comment-list {
-  margin-bottom: 10px;
-}
-
-.comment-item {
-  font-size: 13px;
-  margin-bottom: 8px;
-  padding-bottom: 8px;
-  border-bottom: 1px dashed #ebeef5;
-}
-.comment-item:last-child {
-  border-bottom: none;
-}
-.comment-meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   margin-bottom: 4px;
 }
-.comment-avatar {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-.comment-meta-text {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-}
-.comment-time {
-  color: #909399;
+
+.post-time {
   font-size: 12px;
-}
-.comment-main {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  flex-wrap: wrap;
+  color: #999;
+  margin-bottom: 8px;
 }
 
-.comment-user {
-  color: var(--el-color-primary);
-  font-weight: bold;
-}
-.comment-content {
-  color: #303133;
-}
-.comment-actions {
-  margin-top: 4px;
-}
-.comment-replies {
-  margin-top: 6px;
-  margin-left: 18px;
-  padding-left: 10px;
-  border-left: 2px solid #e9edf3;
-}
-.comment-item.child {
-  border-bottom: none;
-  padding-bottom: 0;
-}
-.comment-image {
-  width: 84px;
-  height: 84px;
-  border-radius: 4px;
-  margin-top: 6px;
-}
-.reply-target {
-  margin-bottom: 8px;
+.reply-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
   color: #606266;
-  font-size: 12px;
+  font-size: 13px;
+  user-select: none;
+  padding: 4px 0;
+  transition: color 0.2s;
 }
-.reply-tools {
-  margin-top: 8px;
+.reply-toggle:hover {
+  color: var(--el-color-primary);
+}
+
+.reply-section {
+  margin-left: 2em;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #e9edf3;
+}
+
+.reply-item {
   display: flex;
   gap: 8px;
-  align-items: center;
+  margin-bottom: 12px;
 }
-.comment-upload-preview {
-  width: 48px;
-  height: 48px;
+
+.reply-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.reply-content-area {
+  flex: 1;
+  min-width: 0;
+}
+
+.reply-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.reply-username {
+  color: #303133;
+  font-weight: bold;
+  font-size: 13px;
+}
+
+.reply-time {
+  font-size: 11px;
+  color: #999;
+}
+
+.reply-text {
+  color: #303133;
+  font-size: 13px;
+  margin-top: 2px;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.reply-img {
   border-radius: 4px;
+  object-fit: cover;
+  margin-top: 6px;
+}
+
+.show-more-wrap {
+  margin-bottom: 12px;
+}
+
+.reply-input-area {
+  margin-top: 8px;
+}
+
+.reply-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.reply-textarea {
+  flex: 1;
+}
+
+.reply-upload-btn {
+  flex-shrink: 0;
+}
+
+.reply-upload-preview {
+  border-radius: 4px;
+  object-fit: cover;
+  margin-top: 8px;
 }
 
 .map-container {
@@ -853,11 +952,13 @@ onBeforeUnmount(() => {
   gap: 8px;
   margin-bottom: 8px;
 }
+
 .location-suggest {
   position: relative;
   width: 200%;
   max-width: 1000px;
 }
+
 .candidate-dropdown {
   position: absolute;
   left: 0;
@@ -871,6 +972,7 @@ onBeforeUnmount(() => {
   max-height: 260px;
   overflow: auto;
 }
+
 .candidate-item {
   width: 100%;
   border: none;
@@ -882,17 +984,89 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: 2px;
 }
+
 .candidate-item:hover {
   background: #f5f7fa;
 }
+
 .candidate-main {
   color: #303133;
   font-size: 14px;
 }
+
 .candidate-sub {
   color: #909399;
   font-size: 12px;
 }
+
+.upload-area {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.upload-preview {
+  position: relative;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f7fa;
+}
+
+.upload-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.upload-preview-remove {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  cursor: pointer;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.upload-trigger {
+  border: 1px dashed #dcdfe6;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  color: #909399;
+  font-size: 12px;
+  background: #fafafa;
+  transition: border-color 0.2s;
+}
+
+.upload-trigger:hover {
+  border-color: var(--el-color-primary);
+  color: var(--el-color-primary);
+}
+
+.upload-hint {
+  display: block;
+  font-size: 12px;
+  color: #909399;
+  margin-top: 6px;
+}
+
 @media (max-width: 768px) {
   .location-suggest {
     width: 100%;
