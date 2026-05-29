@@ -11,7 +11,7 @@ const list = ref<KnowledgeItem[]>([])
 const groupedList = computed(() => {
   const groups: Record<string, KnowledgeItem[]> = {}
   for (const item of list.value) {
-    const cat = item.category || '其他'
+    const cat = item.category || '默认'
     if (!groups[cat]) groups[cat] = []
     groups[cat].push(item)
   }
@@ -47,7 +47,6 @@ onMounted(async () => {
       <aside class="sidebar">
         <div class="sidebar-header">
           <h1>小常识</h1>
-          <p>养宠科普与到访信息</p>
         </div>
         <nav class="directory">
           <div v-for="(items, category) in groupedList" :key="category" class="dir-group">
@@ -86,8 +85,8 @@ onMounted(async () => {
 .sidebar {
   width: 280px;
   flex-shrink: 0;
-  background: #fff;
-  border-right: 1px solid #eee;
+  background: #f5efe6;
+  border-right: 1px solid #ede4d6;
   padding: 32px 0;
   overflow-y: auto;
 }
@@ -138,7 +137,7 @@ onMounted(async () => {
 }
 
 .dir-item:hover {
-  background: #f3f4f6;
+  background: #ede4d6;
 }
 
 .dir-item.active {
