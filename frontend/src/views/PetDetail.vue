@@ -357,8 +357,6 @@ onMounted(load)
 
 .suitability-item {
   background: #fefaf5;
-  border: 1px solid #ebe4db;
-  border-radius: 10px;
   padding: 20px;
 }
 
