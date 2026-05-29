@@ -8,9 +8,9 @@ import java.util.List;
 
 @Mapper
 public interface CommentMapper extends BaseMapper<Comment> {
-    @Select("SELECT c.*, u.username, u.avatar FROM comment c LEFT JOIN sys_user u ON c.user_id = u.id WHERE c.post_id = #{postId} AND c.status = 1 ORDER BY c.create_time ASC")
+    @Select("SELECT c.*, u.username, u.nickname, u.avatar FROM comment c LEFT JOIN sys_user u ON c.user_id = u.id WHERE c.post_id = #{postId} AND c.status = 1 ORDER BY c.create_time ASC")
     List<Comment> selectByPostId(Long postId);
 
-    @Select("SELECT c.*, u.username, u.avatar FROM comment c LEFT JOIN sys_user u ON c.user_id = u.id WHERE c.post_id = #{postId} ORDER BY c.create_time ASC")
+    @Select("SELECT c.*, u.username, u.nickname, u.avatar FROM comment c LEFT JOIN sys_user u ON c.user_id = u.id WHERE c.post_id = #{postId} ORDER BY c.create_time ASC")
     List<Comment> selectAllByPostId(Long postId);
 }

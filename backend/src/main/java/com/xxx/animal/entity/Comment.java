@@ -23,5 +23,7 @@ public class Comment {
     @TableField(exist = false)
     private String username;
     @TableField(exist = false)
+    private String nickname;
+    @TableField(exist = false)
     private String avatar;
 }

@@ -28,6 +28,8 @@ public class Post {
     @TableField(exist = false)
     private String username;
     @TableField(exist = false)
+    private String nickname;
+    @TableField(exist = false)
     private String avatar;
     @TableField(exist = false)
     private List<Comment> comments;

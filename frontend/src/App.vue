@@ -70,8 +70,8 @@ function logout() {
 
         <div class="auth-actions">
           <template v-if="user">
-            <span class="account-btn" @click="router.push('/account')">账号管理</span>
-            <span class="username">欢迎, {{ user.username }}</span>
+            <el-button type="warning" link @click="router.push('/account')">账号管理</el-button>
+            <span class="username">欢迎, {{ user.nickname || user.username }}</span>
             <el-button link @click="logout">退出</el-button>
             <el-button v-if="user.role === 'ADMIN'" type="warning" link @click="router.push('/admin')">管理后台</el-button>
           </template>
@@ -206,27 +206,12 @@ function logout() {
   margin-left: 18px;
 }
 
-.account-btn {
-  font-size: 13px;
-  color: #667284;
-  background: #f8fafc;
-  border: 1px solid #e6ebf1;
-  border-radius: 999px;
-  padding: 7px 14px;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-.account-btn:hover {
-  background: #eef1f5;
-}
-
 .username {
-  font-size: 13px;
-  color: #667284;
-  background: #f8fafc;
-  border: 1px solid #e6ebf1;
-  border-radius: 999px;
-  padding: 7px 14px;
+  font-size: 14px;
+  color: #2f3b4a;
+  background: #f5efe4;
+  padding: 4px 10px;
+  border-radius: 6px;
 }
 
 .login-btn {

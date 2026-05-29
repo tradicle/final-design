@@ -582,7 +582,7 @@ onBeforeUnmount(() => {
         <div class="post-item">
           <div class="post-header">
             <img :src="getAssetUrl(post.avatar) || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'" class="post-avatar" />
-            <span class="post-username">{{ post.username || '匿名用户' }}</span>
+            <span class="post-username">{{ post.nickname || post.username || '匿名用户' }}</span>
           </div>
 
           <h3 class="post-title">{{ post.title }}</h3>
@@ -619,7 +619,7 @@ onBeforeUnmount(() => {
                 />
                 <div class="reply-content-area">
                   <div class="reply-meta">
-                    <span class="reply-username">{{ reply.username || '匿名用户' }}</span>
+                    <span class="reply-username">{{ reply.nickname || reply.username || '匿名用户' }}</span>
                     <span class="reply-time">{{ relativeTime(reply.createTime) }}</span>
                   </div>
                   <div class="reply-text">{{ reply.content }}</div>
