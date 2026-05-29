@@ -45,9 +45,6 @@ onMounted(async () => {
   <div class="page">
     <div class="layout" v-loading="loading">
       <aside class="sidebar">
-        <div class="sidebar-header">
-          <h1>小常识</h1>
-        </div>
         <nav class="directory">
           <div v-for="(items, category) in groupedList" :key="category" class="dir-group">
             <div v-if="category" class="dir-group-title">{{ category }}</div>
@@ -91,23 +88,6 @@ onMounted(async () => {
   overflow-y: auto;
 }
 
-.sidebar-header {
-  padding: 0 24px 20px;
-  border-bottom: 1px solid #f0f0f0;
-  margin-bottom: 12px;
-}
-
-.sidebar-header h1 {
-  margin: 0;
-  font-size: 22px;
-  color: #1f2937;
-}
-
-.sidebar-header p {
-  margin: 6px 0 0;
-  color: #9ca3af;
-  font-size: 13px;
-}
 
 .directory {
   padding: 0 12px;
@@ -118,12 +98,12 @@ onMounted(async () => {
 }
 
 .dir-group-title {
-  font-size: 12px;
+  font-size: 22px;
   font-weight: 700;
-  color: #9ca3af;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  padding: 8px 12px 6px;
+  color: #1f2937;
+  padding: 0 24px 20px;
+  border-bottom: 1px solid #ede4d6;
+  margin-bottom: 12px;
 }
 
 .dir-item {
