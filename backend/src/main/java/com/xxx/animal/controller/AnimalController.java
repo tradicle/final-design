@@ -78,7 +78,7 @@ public class AnimalController {
         if (category != null && !category.isBlank() && !"ALL".equalsIgnoreCase(category)) {
             wrapper.eq(Animal::getCategory, category);
         }
-        if (status != null) {
+        if (status != null && status >= 0) {
             wrapper.eq(Animal::getStatus, status);
         }
         wrapper.orderByDesc(Animal::getUpdateTime);
