@@ -11,7 +11,7 @@ const list = ref<KnowledgeItem[]>([])
 const groupedList = computed(() => {
   const groups: Record<string, KnowledgeItem[]> = {}
   for (const item of list.value) {
-    const cat = item.category || '默认'
+    const cat = item.category || ''
     if (!groups[cat]) groups[cat] = []
     groups[cat].push(item)
   }
@@ -50,7 +50,7 @@ onMounted(async () => {
         </div>
         <nav class="directory">
           <div v-for="(items, category) in groupedList" :key="category" class="dir-group">
-            <div class="dir-group-title">{{ category }}</div>
+            <div v-if="category" class="dir-group-title">{{ category }}</div>
             <div
               v-for="item in items"
               :key="item.id"
