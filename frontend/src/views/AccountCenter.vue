@@ -185,6 +185,7 @@ onMounted(() => {
   <div class="page">
     <div class="container" v-loading="loading">
       <div v-if="!isPasswordPage" class="account-layout">
+        <h2 class="page-title">账号管理</h2>
         <button class="avatar-button" type="button" @click="openAvatarDialog">
           <div class="avatar-box">
             <el-avatar :size="120" :src="getAssetUrl(displayAvatar)">
@@ -275,6 +276,13 @@ onMounted(() => {
   max-width: 920px;
   margin: 0 auto;
   padding: 0 28px;
+}
+
+.page-title {
+  margin: 0;
+  color: #32251e;
+  font-size: 28px;
+  font-weight: 700;
 }
 
 .account-layout,

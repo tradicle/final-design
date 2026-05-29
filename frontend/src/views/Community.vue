@@ -161,8 +161,7 @@ function formatCommentTime(time?: string) {
 }
 
 function commentAvatar(avatar?: string) {
-  if (!avatar) return 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
-  return avatar
+  return getAssetUrl(avatar) || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
 }
 
 async function handleComment(post: Post) {
@@ -510,7 +509,7 @@ onBeforeUnmount(() => {
     <div v-else class="post-list">
       <el-card v-for="post in posts" :key="post.id" class="post-card">
         <div class="post-header">
-          <img :src="post.avatar || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'" class="avatar" />
+          <img :src="getAssetUrl(post.avatar) || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'" class="avatar" />
           <div class="user-info">
             <span class="username">{{ post.username || '匿名用户' }}</span>
             <span class="time">{{ post.createTime?.replace('T', ' ') }}</span>
