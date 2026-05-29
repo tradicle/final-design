@@ -48,8 +48,13 @@ export const router = createRouter({
     { path: '/about', component: About },
     { path: '/donate', component: Donate },
     { path: '/community', component: Community, meta: { requiresAuth: true } },
-    { path: '/knowledge', component: Knowledge },
-    { path: '/knowledge/:id', component: KnowledgeDetail },
+    {
+      path: '/knowledge',
+      component: Knowledge,
+      children: [
+        { path: ':id', component: KnowledgeDetail },
+      ],
+    },
     { path: '/account', component: AccountCenter, meta: { requiresAuth: true } },
     { path: '/transparency', component: Transparency },
     {

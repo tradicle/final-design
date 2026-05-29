@@ -5,6 +5,7 @@ export interface KnowledgeItem {
   title: string
   content: string
   sortOrder: number
+  category: string
 }
 
 export async function getKnowledgeList() {

@@ -98,6 +98,28 @@ onMounted(async () => {
       </div>
 
       <div class="content-wrapper">
+        <div class="section urgent-section" v-if="urgentNeeds.length > 0">
+          <div class="section-header">
+            <h2>急需物资清单</h2>
+          </div>
+          <div class="urgent-grid">
+            <div class="urgent-card" v-for="need in urgentNeeds" :key="need.id">
+              <div>
+                <h3>{{ need.name }}</h3>
+                <p>当前缺口：{{ need.gap }}</p>
+                <p>更新时间：{{ need.updatedAt || '待更新' }}</p>
+              </div>
+              <el-button
+                type="primary"
+                :disabled="submittedNeedIds.includes(need.id)"
+                @click="openClaim(need)"
+              >
+                {{ submittedNeedIds.includes(need.id) ? '已提交认领' : '我要认领' }}
+              </el-button>
+            </div>
+          </div>
+        </div>
+
         <!-- Donation Scope -->
         <div class="section scope-section">
           <div class="section-header">
@@ -132,28 +154,6 @@ onMounted(async () => {
             <p><strong>物资接收地址：</strong> 深圳市南山区沙河街道睿印商城 B2 层下沉广场喵喵领养小屋</p>
             <p><strong>收件人：</strong> 汪汪喵呜物资组</p>
             <p><strong>联系电话：</strong> 0755-86035169</p>
-          </div>
-        </div>
-
-        <div class="section urgent-section" v-if="urgentNeeds.length > 0">
-          <div class="section-header">
-            <h2>急需物资清单</h2>
-          </div>
-          <div class="urgent-grid">
-            <div class="urgent-card" v-for="need in urgentNeeds" :key="need.id">
-              <div>
-                <h3>{{ need.name }}</h3>
-                <p>当前缺口：{{ need.gap }}</p>
-                <p>更新时间：{{ need.updatedAt || '待更新' }}</p>
-              </div>
-              <el-button
-                type="primary"
-                :disabled="submittedNeedIds.includes(need.id)"
-                @click="openClaim(need)"
-              >
-                {{ submittedNeedIds.includes(need.id) ? '已提交认领' : '我要认领' }}
-              </el-button>
-            </div>
           </div>
         </div>
 

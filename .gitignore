@@ -11,4 +11,5 @@ frontend/.vite/
 .project
 .settings/
 *.log
+scripts/node_modules/
 

@@ -13,4 +13,5 @@ public class Knowledge {
     private String title;
     private String content;
     private Integer sortOrder;
+    private String category;
 }

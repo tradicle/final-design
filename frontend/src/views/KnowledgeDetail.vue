@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getKnowledgeDetail, type KnowledgeItem } from '../api/knowledge'
 import { ElMessage } from 'element-plus'
@@ -9,10 +9,9 @@ const router = useRouter()
 const loading = ref(false)
 const detail = ref<KnowledgeItem | null>(null)
 
-onMounted(async () => {
+async function load(id: string) {
   loading.value = true
   try {
-    const id = route.params.id as string
     const res = await getKnowledgeDetail(id)
     if (res.code === 0 && res.data) {
       detail.value = res.data
@@ -23,62 +22,50 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
+}
+
+onMounted(() => {
+  const id = route.params.id as string
+  if (id) load(id)
+})
+
+watch(() => route.params.id, (newId) => {
+  if (newId) load(newId as string)
 })
 </script>
 
 <template>
-  <div class="page">
-    <div class="container">
-      <el-card class="card" shadow="never">
-        <div class="toolbar">
-          <el-button link @click="router.push('/knowledge')">返回小常识列表</el-button>
-        </div>
-        <el-skeleton v-if="loading" :rows="10" animated />
-        <template v-else-if="detail">
-          <h1>{{ detail.title }}</h1>
-          <div class="content">{{ detail.content }}</div>
-        </template>
-      </el-card>
-    </div>
+  <div class="detail-pane">
+    <el-skeleton v-if="loading" :rows="10" animated />
+    <template v-else-if="detail">
+      <h1>{{ detail.title }}</h1>
+      <div class="content" v-if="detail.content">{{ detail.content }}</div>
+      <div class="content empty" v-else>暂无内容</div>
+    </template>
   </div>
 </template>
 
 <style scoped>
-.page {
-  padding: 36px 0 56px;
-}
-
-.container {
-  max-width: 1160px;
-  margin: 0 auto;
-  padding: 0 28px;
-}
-
-.card {
-  border: 1px solid #e8edf3;
-  border-radius: 14px;
-  background: #fff;
-}
-
-.toolbar {
-  margin-bottom: 10px;
+.detail-pane {
+  padding: 40px 48px;
 }
 
 h1 {
-  margin: 0 0 16px;
-  font-size: 30px;
+  margin: 0 0 24px;
+  font-size: 28px;
   color: #1f2937;
+  line-height: 1.4;
 }
 
 .content {
   white-space: pre-line;
   color: #374151;
-  line-height: 1.9;
+  line-height: 2;
+  font-size: 16px;
 }
 
-@media (max-width: 768px) {
-  .container {
-    padding: 0 14px;
-  }
+.content.empty {
+  color: #9ca3af;
+  font-style: italic;
 }
 </style>
