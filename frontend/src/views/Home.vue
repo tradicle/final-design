@@ -259,24 +259,26 @@ onMounted(async () => {
 }
 
 .hero-stat-card {
-  background: rgba(255, 255, 255, 0.88);
+  width: 200px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 14px;
-  padding: 28px 42px;
+  padding: 28px 20px;
   text-align: center;
-  min-width: 150px;
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
 
 .hero-stat-number {
   font-size: 38px;
   font-weight: 700;
-  color: #1f2937;
+  color: rgba(255, 255, 255, 0.92);
   white-space: nowrap;
 }
 
 .hero-stat-label {
   font-size: 14px;
-  color: #6b7280;
+  color: rgba(255, 255, 255, 0.7);
   margin-top: 6px;
 }
 
@@ -570,8 +572,8 @@ onMounted(async () => {
     gap: 16px;
   }
   .hero-stat-card {
-    padding: 20px 24px;
-    min-width: 120px;
+    width: 160px;
+    padding: 20px 16px;
   }
   .hero-stat-number {
     font-size: 28px;
@@ -599,15 +601,17 @@ onMounted(async () => {
     gap: 10px;
   }
   .hero-stat-card {
-    padding: 16px 14px;
-    min-width: 70px;
+    width: 120px;
+    padding: 14px 10px;
     border-radius: 10px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
   }
   .hero-stat-number {
-    font-size: 24px;
+    font-size: 22px;
   }
   .hero-stat-label {
-    font-size: 12px;
+    font-size: 11px;
   }
   .animal-grid,
   .knowledge-grid {
