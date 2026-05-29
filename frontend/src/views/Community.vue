@@ -581,7 +581,7 @@ onBeforeUnmount(() => {
       <template v-for="(post, pIdx) in posts" :key="post.id">
         <div class="post-item">
           <div class="post-header">
-            <img :src="post.avatar || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'" class="post-avatar" />
+            <img :src="getAssetUrl(post.avatar) || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'" class="post-avatar" />
             <span class="post-username">{{ post.username || '匿名用户' }}</span>
           </div>
 
@@ -614,7 +614,7 @@ onBeforeUnmount(() => {
             <div class="reply-list" v-if="sortedReplies(post).length">
               <div class="reply-item" v-for="reply in visibleReplies(post)" :key="reply.id">
                 <img
-                  :src="reply.avatar || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'"
+                  :src="getAssetUrl(reply.avatar) || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'"
                   class="reply-avatar"
                 />
                 <div class="reply-content-area">
