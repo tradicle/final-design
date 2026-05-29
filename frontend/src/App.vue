@@ -46,9 +46,8 @@ function logout() {
     <el-header height="80px" class="header">
       <div class="header-inner">
         <div class="brand" @click="router.push('/')">
-          <img src="/hero.png" alt="Logo" class="logo" v-if="false"/> 
-          <!-- Placeholder for logo -->
-          <span class="brand-text">汪汪喵呜孤儿院</span>
+          <img src="/home-brand-icon.png" alt="Logo" class="brand-icon" />
+          <span class="brand-text">毛茸茸之家</span>
         </div>
         
         <el-menu mode="horizontal" :ellipsis="false" router class="menu" :default-active="activeIndex">
@@ -103,12 +102,12 @@ function logout() {
         </div>
         <div class="footer-col">
           <h3>关注我们</h3>
-          <p>微信公众号：汪汪喵呜孤儿院</p>
+          <p>微信公众号：毛茸茸之家</p>
           <p>服务时间：周一至周日 9:00-18:00</p>
         </div>
       </div>
       <div class="footer-bottom">
-        &copy; 2026 汪汪喵呜孤儿院 版权所有
+        &copy; 2026 毛茸茸之家 版权所有
       </div>
     </el-footer>
   </el-container>
@@ -147,6 +146,14 @@ function logout() {
   align-items: center;
   cursor: pointer;
   margin-right: 28px;
+  gap: 10px;
+}
+
+.brand-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  object-fit: cover;
 }
 
 .brand-text {
