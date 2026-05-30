@@ -30,10 +30,15 @@ const popperOptions = {
       phase: 'beforeWrite' as const,
       requires: ['computeStyles'],
       fn({ state }: { state: any }) {
-        state.styles.popper.width = `${state.rects.reference.width}px`
+        const ref = state.elements.reference as HTMLElement
+        const title = ref.classList.contains('el-sub-menu__title') ? ref : ref.querySelector('.el-sub-menu__title') as HTMLElement | null
+        const w = title ? title.offsetWidth : ref.offsetWidth
+        state.styles.popper.width = `${w}px`
       },
       effect({ state }: { state: any }) {
-        ;(state.elements.popper as HTMLElement).style.width = `${(state.elements.reference as HTMLElement).offsetWidth}px`
+        const ref = state.elements.reference as HTMLElement
+        const title = ref.classList.contains('el-sub-menu__title') ? ref : ref.querySelector('.el-sub-menu__title') as HTMLElement | null
+        ;(state.elements.popper as HTMLElement).style.width = `${(title || ref).offsetWidth}px`
       },
     },
   ],
