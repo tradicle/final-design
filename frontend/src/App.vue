@@ -19,7 +19,7 @@ function logout() {
 <style>
 /* Global style override for the adopt menu popup */
 .adopt-submenu-popup {
-  width: 86px !important;
+  width: 32px !important;
 }
 .adopt-submenu-popup .el-menu--popup {
   width: 100% !important;
