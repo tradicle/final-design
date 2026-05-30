@@ -211,9 +211,10 @@ function logout() {
 }
 
 .username {
-  font-size: 14px;
-  color: #2f3b4a;
-  background: #f5efe4;
+  font-size: 16px;
+  font-weight: bold;
+  color: #ffffff;
+  background: #e8b86d;
   padding: 4px 10px;
   border-radius: 6px;
 }
