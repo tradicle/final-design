@@ -3,7 +3,6 @@ import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from './store/user'
 import { computed } from 'vue'
 
-
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
@@ -15,46 +14,16 @@ function logout() {
   userStore.logout()
   router.push('/')
 }
-
-const popperOptions = {
-  modifiers: [
-    {
-      name: 'offset',
-      options: {
-        offset: [0, 1],
-      },
-    },
-    {
-      name: 'syncWidth',
-      enabled: true,
-      phase: 'beforeWrite' as const,
-      requires: ['computeStyles'],
-      fn({ state }: { state: any }) {
-        const ref = state.elements.reference as HTMLElement
-        const title = ref.classList.contains('el-sub-menu__title') ? ref : ref.querySelector('.el-sub-menu__title') as HTMLElement | null
-        const w = title ? title.offsetWidth : ref.offsetWidth
-        state.styles.popper.width = `${w}px`
-      },
-      effect({ state }: { state: any }) {
-        const ref = state.elements.reference as HTMLElement
-        const title = ref.classList.contains('el-sub-menu__title') ? ref : ref.querySelector('.el-sub-menu__title') as HTMLElement | null
-        ;(state.elements.popper as HTMLElement).style.width = `${(title || ref).offsetWidth}px`
-      },
-    },
-  ],
-}
-
-
 </script>
 
 <style>
 /* Global style override for the adopt menu popup */
 .adopt-submenu-popup {
-  /* width + min-width are set dynamically via popper-options syncWidth modifier */
+  width: 86px !important;
 }
 .adopt-submenu-popup .el-menu--popup {
   width: 100% !important;
-  padding: 5px 0 !important;
+  padding: 2px 0 !important;
   border-radius: 0 0 12px 12px !important;
 }
 .adopt-submenu-popup .el-menu-item {
@@ -78,7 +47,7 @@ const popperOptions = {
         <el-menu mode="horizontal" :ellipsis="false" router class="menu" :default-active="activeIndex">
           <el-menu-item index="/">首页</el-menu-item>
           
-          <el-sub-menu index="/animals" class="adopt-menu" popper-class="adopt-submenu-popup" :popper-options="popperOptions">
+          <el-sub-menu index="/animals" class="adopt-menu" popper-class="adopt-submenu-popup">
             <template #title>
               <span @click="router.push('/animals')">领养</span>
             </template>
