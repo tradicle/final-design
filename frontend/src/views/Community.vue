@@ -6,7 +6,7 @@ import { uploadFile } from '../api/file'
 import { useUserStore } from '../store/user'
 import { ElMessage } from 'element-plus'
 import type { UploadRequestOptions } from 'element-plus'
-import { Plus, Location, Search, ChatDotRound } from '@element-plus/icons-vue'
+import { Plus, Location, Search, ChatDotRound, Loading, PictureFilled } from '@element-plus/icons-vue'
 import { getAssetUrl } from '../utils/assets'
 import { relativeTime } from '../utils/time'
 
@@ -30,8 +30,6 @@ const expandedPosts = ref(new Set<number>())
 const showAllReplies = ref(new Set<number>())
 const replyDrafts = reactive<Record<number, { content: string; image: string }>>({})
 const dialogLayout = ref<'4:3' | '3:4'>('4:3')
-const replyLayouts = reactive<Record<number, '4:3' | '3:4'>>({})
-const postLayouts = reactive<Record<number, '4:3' | '3:4'>>({})
 
 let map: any = null
 let mapMarker: any = null
@@ -71,15 +69,6 @@ async function load() {
     const res = await getPostList()
     if (res.code === 0) {
       posts.value = res.data
-      for (const post of posts.value) {
-        if (!post.id) continue
-        if (!(post.id in postLayouts)) {
-          postLayouts[post.id] = '4:3'
-        }
-        if (!(post.id in replyLayouts)) {
-          replyLayouts[post.id] = '4:3'
-        }
-      }
     }
   } finally {
     loading.value = false
@@ -161,8 +150,6 @@ async function uploadReplyImage(postId: number, options: UploadRequestOptions) {
   const draft = ensureReplyDraft(postId)
   try {
     const file = options.file as File
-    const dims = await getImageDimensions(file)
-    replyLayouts[postId] = dims.width >= dims.height ? '4:3' : '3:4'
     const res = await uploadFile(file, 'community')
     if (res.code === 0) {
       draft.image = res.data
@@ -236,7 +223,6 @@ async function handleReply(post: Post) {
       ElMessage.success('回复成功')
       draft.content = ''
       draft.image = ''
-      if (post.id) delete replyLayouts[post.id]
       load()
     } else {
       ElMessage.error(res.message || '回复失败')
@@ -268,32 +254,9 @@ function getImages(json: string | undefined): string[] {
   }
 }
 
-function onPostImgLoad(post: Post, event: Event) {
-  if (!post.id) return
-  if (post.id in postLayouts) return
-  const img = event.target as HTMLImageElement
-  if (img.naturalWidth && img.naturalHeight) {
-    postLayouts[post.id] = img.naturalWidth >= img.naturalHeight ? '4:3' : '3:4'
-  }
-}
-
 const dialogPreviewStyle = {
   '4:3': { width: '160px', height: '120px' },
   '3:4': { width: '120px', height: '160px' }
-}
-
-function postImgStyle(post: Post) {
-  const layout = (post.id && postLayouts[post.id]) || '4:3'
-  return layout === '4:3'
-    ? { width: '160px', height: '120px' }
-    : { width: '120px', height: '160px' }
-}
-
-function replyImgStyle(postId: number) {
-  const layout = replyLayouts[postId] || '4:3'
-  return layout === '4:3'
-    ? { width: '160px', height: '120px' }
-    : { width: '120px', height: '160px' }
 }
 
 function buildPreciseLocation(point: any, result: any) {
@@ -592,14 +555,26 @@ onBeforeUnmount(() => {
           <p class="post-body">{{ post.content }}</p>
 
           <div class="post-images" v-if="getImages(post.images).length">
-            <img
+            <el-image
               v-for="(img, idx) in getImages(post.images)"
               :key="idx"
               :src="getAssetUrl(img)"
-              :style="postImgStyle(post)"
-              class="post-img"
-              @load="(e: Event) => onPostImgLoad(post, e)"
-            />
+              :preview-src-list="getImages(post.images).map(i => getAssetUrl(i))"
+              :initial-index="idx"
+              fit="cover"
+              style="width: 160px; height: 120px; border-radius: 4px;"
+            >
+              <template #placeholder>
+                <div class="img-placeholder">
+                  <el-icon><Loading /></el-icon>
+                </div>
+              </template>
+              <template #error>
+                <div class="img-error">
+                  <el-icon><PictureFilled /></el-icon>
+                </div>
+              </template>
+            </el-image>
           </div>
 
           <div class="post-location" v-if="post.location">
@@ -626,12 +601,24 @@ onBeforeUnmount(() => {
                     <span class="reply-time">{{ relativeTime(reply.createTime) }}</span>
                   </div>
                   <div class="reply-text">{{ reply.content }}</div>
-                  <img
+                  <el-image
                     v-if="reply.image"
                     :src="getAssetUrl(reply.image)"
-                    :style="replyImgStyle(post.id)"
-                    class="reply-img"
-                  />
+                    :preview-src-list="[getAssetUrl(reply.image)]"
+                    fit="cover"
+                    style="width: 160px; height: 120px; border-radius: 4px;"
+                  >
+                    <template #placeholder>
+                      <div class="img-placeholder">
+                        <el-icon><Loading /></el-icon>
+                      </div>
+                    </template>
+                    <template #error>
+                      <div class="img-error">
+                        <el-icon><PictureFilled /></el-icon>
+                      </div>
+                    </template>
+                  </el-image>
                 </div>
               </div>
             </div>
@@ -664,8 +651,7 @@ onBeforeUnmount(() => {
               <img
                 v-if="ensureReplyDraft(post.id).image"
                 :src="getAssetUrl(ensureReplyDraft(post.id).image)"
-                :style="replyImgStyle(post.id)"
-                class="reply-upload-preview"
+                style="width: 160px; height: 120px; object-fit: cover; border-radius: 4px;"
               />
             </div>
           </div>
@@ -822,9 +808,17 @@ onBeforeUnmount(() => {
   margin-bottom: 8px;
 }
 
-.post-img {
+.img-placeholder,
+.img-error {
+  width: 160px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f7fa;
   border-radius: 4px;
-  object-fit: cover;
+  color: #c0c4cc;
+  font-size: 24px;
 }
 
 .post-location {
@@ -908,12 +902,6 @@ onBeforeUnmount(() => {
   word-break: break-word;
 }
 
-.reply-img {
-  border-radius: 4px;
-  object-fit: cover;
-  margin-top: 6px;
-}
-
 .show-more-wrap {
   margin-bottom: 12px;
 }
@@ -934,12 +922,6 @@ onBeforeUnmount(() => {
 
 .reply-upload-btn {
   flex-shrink: 0;
-}
-
-.reply-upload-preview {
-  border-radius: 4px;
-  object-fit: cover;
-  margin-top: 8px;
 }
 
 .map-container {
