@@ -25,11 +25,7 @@ onMounted(load)
   <div class="page">
     <div class="container">
       <div class="hero">
-        <div>
-          <p class="eyebrow">Love Activities</p>
-          <h1>爱心活动</h1>
-          <p class="hero-text">这里记录义卖、救助行动、暖冬计划和专项求助等真实活动内容，方便用户了解平台的持续运营与公益进展。</p>
-        </div>
+        <h1>爱心活动</h1>
       </div>
 
       <div class="activity-list" v-loading="loading">
@@ -62,25 +58,10 @@ onMounted(load)
   padding: 18px 0 32px;
 }
 
-.eyebrow {
-  margin: 0 0 10px;
-  color: #c96c35;
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-}
-
 .hero h1 {
-  margin: 0 0 14px;
+  margin: 0;
   font-size: 38px;
   color: #2e241e;
-}
-
-.hero-text {
-  margin: 0;
-  max-width: 720px;
-  color: #66584f;
-  line-height: 1.9;
 }
 
 .activity-list {
