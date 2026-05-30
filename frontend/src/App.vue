@@ -20,9 +20,11 @@ function logout() {
 /* Global style override for the adopt menu popup */
 .adopt-submenu-popup {
   width: 32px !important;
+  min-width: 32px !important;
 }
 .adopt-submenu-popup .el-menu--popup {
   width: 100% !important;
+  min-width: 0 !important;
   padding: 2px 0 !important;
   border-radius: 0 0 12px 12px !important;
 }
