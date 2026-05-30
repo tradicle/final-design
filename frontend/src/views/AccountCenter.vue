@@ -94,7 +94,7 @@ async function loadDefaultAvatars() {
 
 async function customUpload(options: UploadRequestOptions) {
   try {
-    const res = await uploadFile(options.file)
+    const res = await uploadFile(options.file, 'avatars')
     if (res.code === 0) {
       profileForm.avatar = res.data
       avatarDialogVisible.value = false

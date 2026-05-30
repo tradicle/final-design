@@ -97,7 +97,7 @@ async function customUpload(options: UploadRequestOptions) {
       const dims = await getImageDimensions(file)
       dialogLayout.value = dims.width >= dims.height ? '4:3' : '3:4'
     }
-    const res = await uploadFile(file)
+    const res = await uploadFile(file, 'community')
     if (res.code === 0) {
       form.images.push(res.data)
     } else {
@@ -163,7 +163,7 @@ async function uploadReplyImage(postId: number, options: UploadRequestOptions) {
     const file = options.file as File
     const dims = await getImageDimensions(file)
     replyLayouts[postId] = dims.width >= dims.height ? '4:3' : '3:4'
-    const res = await uploadFile(file)
+    const res = await uploadFile(file, 'community')
     if (res.code === 0) {
       draft.image = res.data
     } else {

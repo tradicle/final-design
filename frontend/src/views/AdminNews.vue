@@ -170,7 +170,7 @@ async function generateFromAnimals() {
 async function uploadCover(options: UploadRequestOptions) {
   uploading.value = true
   try {
-    const res = await uploadFile(options.file)
+    const res = await uploadFile(options.file, 'news')
     if (res.code === 0) {
       form.coverImage = res.data
       ElMessage.success('封面上传成功')

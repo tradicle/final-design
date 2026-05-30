@@ -93,7 +93,7 @@ function handleCardClick(animal: Animal) {
 
 async function customUpload(options: UploadRequestOptions) {
   try {
-    const res = await uploadFile(options.file)
+    const res = await uploadFile(options.file, 'animals')
     if (res.code === 0) {
       form.avatar = res.data
     } else {
