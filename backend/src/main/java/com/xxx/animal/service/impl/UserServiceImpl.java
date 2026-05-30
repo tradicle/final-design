@@ -2,13 +2,25 @@ package com.xxx.animal.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.xxx.animal.entity.DefaultAvatar;
 import com.xxx.animal.entity.User;
+import com.xxx.animal.mapper.DefaultAvatarMapper;
 import com.xxx.animal.mapper.UserMapper;
 import com.xxx.animal.service.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
+
+    private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
+
+    private final DefaultAvatarMapper defaultAvatarMapper;
+
+    public UserServiceImpl(DefaultAvatarMapper defaultAvatarMapper) {
+        this.defaultAvatarMapper = defaultAvatarMapper;
+    }
 
     @Override
     public User login(String username, String password) {
@@ -31,9 +43,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new RuntimeException("用户名已存在");
         }
         
-        // Set default avatar if null
+        // Set default avatar to 奶油猫咪 if null
         if (user.getAvatar() == null) {
-            user.setAvatar("https://api.dicebear.com/9.x/avataaars/svg?seed=" + user.getUsername());
+            LambdaQueryWrapper<DefaultAvatar> avatarWrapper = new LambdaQueryWrapper<>();
+            avatarWrapper.eq(DefaultAvatar::getName, "奶油猫咪");
+            DefaultAvatar defaultAvatar = defaultAvatarMapper.selectOne(avatarWrapper);
+            if (defaultAvatar != null) {
+                user.setAvatar(defaultAvatar.getImageData());
+            } else {
+                log.warn("Default avatar '奶油猫咪' not found in default_avatar table, falling back to DiceBear");
+                user.setAvatar("https://api.dicebear.com/9.x/avataaars/svg?seed=" + user.getUsername());
+            }
         }
         if (user.getNickname() == null || user.getNickname().isBlank()) {
             user.setNickname(user.getUsername());
