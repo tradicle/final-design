@@ -12,28 +12,29 @@ import java.util.UUID;
 public class FileController {
 
     @PostMapping("/upload")
-    public Result<String> upload(@RequestParam("file") MultipartFile file) {
+    public Result<String> upload(@RequestParam("file") MultipartFile file,
+                                  @RequestParam("folder") String folder) {
         if (file.isEmpty()) {
             return Result.fail("文件为空");
         }
-        
+
         String originalFilename = file.getOriginalFilename();
         String extension = "";
         if (originalFilename != null && originalFilename.contains(".")) {
             extension = originalFilename.substring(originalFilename.lastIndexOf("."));
         }
-        
+
         String fileName = UUID.randomUUID() + extension;
-        // Use backend/uploads for development so it persists
-        String uploadDir = System.getProperty("user.dir") + "/uploads/";
+        // Use backend/uploads/{folder} for development so it persists
+        String uploadDir = System.getProperty("user.dir") + "/uploads/" + folder + "/";
         File dest = new File(uploadDir + fileName);
         if (!dest.getParentFile().exists()) {
             dest.getParentFile().mkdirs();
         }
         try {
             file.transferTo(dest);
-            // Return URL. We need to configure a ResourceHandler to map /uploads/** to this directory.
-            return Result.ok("/uploads/" + fileName);
+            // Return URL. ResourceHandler maps /uploads/** to this directory.
+            return Result.ok("/uploads/" + folder + "/" + fileName);
         } catch (IOException e) {
             e.printStackTrace();
             return Result.fail("上传失败: " + e.getMessage());

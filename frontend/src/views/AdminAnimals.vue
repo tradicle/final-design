@@ -199,7 +199,7 @@ async function remove(id: number) {
 async function uploadAvatar(options: UploadRequestOptions) {
   uploading.value = true
   try {
-    const res = await uploadFile(options.file)
+    const res = await uploadFile(options.file, 'animals')
     if (res.code === 0) {
       form.avatar = res.data
       ElMessage.success('图片上传成功')
@@ -611,7 +611,7 @@ onBeforeUnmount(() => {
       <el-input v-model="form.description" type="textarea" :rows="3" placeholder="简短描述" />
       <div class="editor-field">
         <label class="field-label">详情内容</label>
-        <RichTextEditor :model-value="form.detailContent || ''" @update:model-value="form.detailContent = $event" />
+        <RichTextEditor :model-value="form.detailContent || ''" @update:model-value="form.detailContent = $event" upload-folder="animals" />
       </div>
       <div v-if="editingId && form.updateTime" class="update-time-row">
         <span class="update-time-label">最后更新：</span>

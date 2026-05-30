@@ -12,6 +12,7 @@ import {
   updateActivity,
 } from '../api/activity'
 import { getAssetUrl } from '../utils/assets'
+import RichTextEditor from '../components/RichTextEditor.vue'
 
 const loading = ref(false)
 const saving = ref(false)
@@ -107,7 +108,7 @@ async function remove(id: number) {
 async function uploadCover(options: UploadRequestOptions) {
   uploading.value = true
   try {
-    const res = await uploadFile(options.file)
+    const res = await uploadFile(options.file, 'activities')
     if (res.code === 0) {
       form.coverImage = res.data
       ElMessage.success('封面上传成功')
@@ -186,7 +187,9 @@ onMounted(load)
         </div>
       </div>
       <el-input v-model="form.summary" type="textarea" :rows="3" placeholder="活动摘要" />
-      <el-input v-model="form.content" type="textarea" :rows="14" placeholder="活动正文，支持 HTML 内容" />
+      <div class="editor-field">
+        <RichTextEditor :model-value="form.content || ''" @update:model-value="form.content = $event" upload-folder="activities" />
+      </div>
     </div>
 
     <template #footer>
@@ -308,6 +311,10 @@ onMounted(load)
 }
 
 .form-grid :deep(.el-textarea) {
+  grid-column: 1 / -1;
+}
+
+.editor-field {
   grid-column: 1 / -1;
 }
 

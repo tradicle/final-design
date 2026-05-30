@@ -12,4 +12,5 @@ frontend/.vite/
 .settings/
 *.log
 scripts/node_modules/
+.backups/
 
