@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from './store/user'
-import { computed } from 'vue'
+import { computed, nextTick } from 'vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -14,26 +14,41 @@ function logout() {
   userStore.logout()
   router.push('/')
 }
+
+function onAdoptEnter() {
+  // wait for Element Plus to create the popper DOM, then sync button width
+  nextTick(() => {
+    requestAnimationFrame(() => {
+      const popup = document.querySelector('.adopt-submenu-popup') as HTMLElement | null
+      const title = document.querySelector('.adopt-menu .el-sub-menu__title') as HTMLElement | null
+      if (popup && title && popup.offsetWidth > 0) {
+        title.style.width = `${popup.offsetWidth}px`
+        title.style.minWidth = `${popup.offsetWidth}px`
+      }
+    })
+  })
+}
 </script>
 
 <style>
 /* Global style override for the adopt menu popup */
 .adopt-submenu-popup {
-  width: 32px !important;
-  min-width: 32px !important;
+  width: auto !important;
+  min-width: 0 !important;
 }
 .adopt-submenu-popup .el-menu--popup {
-  width: 100% !important;
+  width: auto !important;
   min-width: 0 !important;
-  padding: 2px 0 !important;
+  padding: 5px 0 !important;
   border-radius: 0 0 12px 12px !important;
 }
 .adopt-submenu-popup .el-menu-item {
-  padding: 0 !important;
+  padding: 0 14px !important;
   justify-content: center;
   height: 40px;
   line-height: 40px;
   text-align: center;
+  white-space: nowrap;
 }
 </style>
 
@@ -49,7 +64,7 @@ function logout() {
         <el-menu mode="horizontal" :ellipsis="false" router class="menu" :default-active="activeIndex">
           <el-menu-item index="/">首页</el-menu-item>
           
-          <el-sub-menu index="/animals" class="adopt-menu" popper-class="adopt-submenu-popup">
+          <el-sub-menu index="/animals" class="adopt-menu" popper-class="adopt-submenu-popup" @mouseenter="onAdoptEnter">
             <template #title>
               <span @click="router.push('/animals')">领养</span>
             </template>
