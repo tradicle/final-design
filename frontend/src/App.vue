@@ -16,23 +16,46 @@ function logout() {
   router.push('/')
 }
 
+const popperOptions = {
+  modifiers: [
+    {
+      name: 'offset',
+      options: {
+        offset: [0, 1],
+      },
+    },
+    {
+      name: 'syncWidth',
+      enabled: true,
+      phase: 'beforeWrite' as const,
+      requires: ['computeStyles'],
+      fn({ state }: { state: any }) {
+        state.styles.popper.width = `${Math.max(state.rects.reference.width, 100)}px`
+      },
+      effect({ state }: { state: any }) {
+        ;(state.elements.popper as HTMLElement).style.width = `${Math.max(
+          (state.elements.reference as HTMLElement).offsetWidth,
+          100,
+        )}px`
+      },
+    },
+  ],
+}
+
 
 </script>
 
 <style>
 /* Global style override for the adopt menu popup */
 .adopt-submenu-popup {
-  min-width: 100px !important;
-  width: 100px !important;
-  /* Removed left: auto !important to let Element Plus handle positioning correctly */
+  /* width + min-width are set dynamically via popper-options syncWidth modifier */
 }
 .adopt-submenu-popup .el-menu--popup {
-  min-width: 100px !important;
   width: 100% !important;
   padding: 5px 0 !important;
+  border-radius: 0 0 12px 12px !important;
 }
 .adopt-submenu-popup .el-menu-item {
-  min-width: 100px !important;
   padding: 0 !important;
   justify-content: center;
   height: 40px;
@@ -53,7 +76,7 @@ function logout() {
         <el-menu mode="horizontal" :ellipsis="false" router class="menu" :default-active="activeIndex">
           <el-menu-item index="/">首页</el-menu-item>
           
-          <el-sub-menu index="/animals" class="adopt-menu" popper-class="adopt-submenu-popup">
+          <el-sub-menu index="/animals" class="adopt-menu" popper-class="adopt-submenu-popup" :popper-options="popperOptions">
             <template #title>
               <span @click="router.push('/animals')">领养</span>
             </template>
