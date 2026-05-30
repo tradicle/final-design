@@ -22,6 +22,7 @@ export interface AdoptionApplicationRow extends AdoptionApplicationPayload {
   id: number
   createTime?: string
   updateTime?: string
+  animalName?: string
 }
 
 export interface AdoptionApplicationPage {

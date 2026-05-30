@@ -48,7 +48,7 @@ public class AdoptionApplicationController {
                     .like(AdoptionApplication::getAddress, keyword));
         }
         wrapper.orderByDesc(AdoptionApplication::getCreateTime).orderByDesc(AdoptionApplication::getId);
-        Page<AdoptionApplication> pageResult = adoptionApplicationService.page(new Page<>(page, pageSize), wrapper);
+        Page<AdoptionApplication> pageResult = adoptionApplicationService.listWithPetName(new Page<>(page, pageSize), wrapper);
         return Result.ok(Map.of(
                 "records", pageResult.getRecords(),
                 "total", pageResult.getTotal()

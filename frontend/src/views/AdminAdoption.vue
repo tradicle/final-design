@@ -148,7 +148,7 @@ onMounted(load)
               <el-descriptions-item label="家庭成员">{{ row.familyMembers || '-' }}</el-descriptions-item>
               <el-descriptions-item label="地址" :span="3">{{ row.address || '-' }}</el-descriptions-item>
               <el-descriptions-item label="申请理由" :span="3">{{ row.reason || '-' }}</el-descriptions-item>
-              <el-descriptions-item label="宠物ID">{{ row.animalId ?? '-' }}</el-descriptions-item>
+              <el-descriptions-item label="宠物名称">{{ row.animalName || '该宠物已删除' }}</el-descriptions-item>
               <el-descriptions-item label="申请用户ID">{{ row.userId ?? '-' }}</el-descriptions-item>
               <el-descriptions-item label="提交时间">{{ row.createTime || '-' }}</el-descriptions-item>
             </el-descriptions>
@@ -157,7 +157,11 @@ onMounted(load)
       </el-table-column>
       <el-table-column prop="applicantName" label="申请人" width="110" />
       <el-table-column prop="phone" label="手机" width="130" />
-      <el-table-column prop="animalId" label="宠物ID" width="90" />
+      <el-table-column label="宠物名称" width="120">
+        <template #default="{ row }">
+          {{ row.animalName || '该宠物已删除' }}
+        </template>
+      </el-table-column>
       <el-table-column prop="address" label="地址" min-width="180" show-overflow-tooltip />
       <el-table-column prop="reason" label="申请理由" min-width="220" show-overflow-tooltip />
       <el-table-column label="状态" width="100">
@@ -217,7 +221,7 @@ onMounted(load)
       <div class="full"><b>地址：</b>{{ detailRow.address }}</div>
       <div class="full"><b>家庭成员：</b>{{ detailRow.familyMembers || '-' }}</div>
       <div class="full"><b>申请理由：</b>{{ detailRow.reason || '-' }}</div>
-      <div><b>宠物ID：</b>{{ detailRow.animalId ?? '-' }}</div>
+      <div><b>宠物名称：</b>{{ detailRow.animalName || '该宠物已删除' }}</div>
       <div><b>申请用户ID：</b>{{ detailRow.userId ?? '-' }}</div>
       <div><b>提交时间：</b>{{ detailRow.createTime || '-' }}</div>
       <div><b>更新时间：</b>{{ detailRow.updateTime || '-' }}</div>
