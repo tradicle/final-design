@@ -30,13 +30,10 @@ const popperOptions = {
       phase: 'beforeWrite' as const,
       requires: ['computeStyles'],
       fn({ state }: { state: any }) {
-        state.styles.popper.width = `${Math.max(state.rects.reference.width, 100)}px`
+        state.styles.popper.width = `${state.rects.reference.width}px`
       },
       effect({ state }: { state: any }) {
-        ;(state.elements.popper as HTMLElement).style.width = `${Math.max(
-          (state.elements.reference as HTMLElement).offsetWidth,
-          100,
-        )}px`
+        ;(state.elements.popper as HTMLElement).style.width = `${(state.elements.reference as HTMLElement).offsetWidth}px`
       },
     },
   ],

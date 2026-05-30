@@ -29,9 +29,10 @@ public class AnimalController {
     public Result<List<Animal>> list(
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String sex,
-            @RequestParam(required = false) String bodySize
+            @RequestParam(required = false) String bodySize,
+            @RequestParam(required = false) String status
     ) {
-        return Result.ok(animalService.listWithCategory(category, sex, bodySize));
+        return Result.ok(animalService.listWithCategory(category, sex, bodySize, status));
     }
 
     @GetMapping("/{id}")

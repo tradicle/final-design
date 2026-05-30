@@ -21,7 +21,8 @@ const isAdmin = computed(() => userStore.user?.role === 'ADMIN')
 const filters = reactive({
   category: 'ALL',
   sex: 'ALL',
-  bodySize: 'ALL'
+  bodySize: 'ALL',
+  status: 'ALL'
 })
 
 const form = reactive({
@@ -52,7 +53,8 @@ async function load() {
     const res = await getAnimalList({
       category: filters.category === 'ALL' ? undefined : filters.category,
       sex: filters.sex === 'ALL' ? undefined : filters.sex,
-      bodySize: filters.bodySize === 'ALL' ? undefined : filters.bodySize
+      bodySize: filters.bodySize === 'ALL' ? undefined : filters.bodySize,
+      status: filters.status === 'ALL' ? undefined : filters.status
     })
     if (res.code === 0) {
       animals.value = res.data
@@ -274,13 +276,21 @@ onMounted(load)
         <el-option label="中型" value="MEDIUM" />
         <el-option label="大型" value="LARGE" />
       </el-select>
+      <el-select v-model="filters.status" placeholder="状态" style="width: 150px">
+        <el-option label="全部状态" value="ALL" />
+        <el-option label="待领养" value="1" />
+        <el-option label="已领养" value="0" />
+      </el-select>
     </div>
 
     <div v-if="loading" class="loading-state">
       <el-skeleton :rows="3" animated />
     </div>
 
-    <el-empty v-else-if="animals.length === 0" description="暂无待领养动物" />
+    <el-empty
+      v-else-if="animals.length === 0"
+      :description="filters.status === '1' ? '暂无待领养动物' : filters.status === '0' ? '暂无已领养动物' : '暂无动物'"
+    />
 
     <div v-else class="animal-grid">
       <el-card

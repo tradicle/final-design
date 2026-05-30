@@ -75,7 +75,7 @@ public class AnimalServiceImpl extends ServiceImpl<AnimalMapper, Animal> impleme
     }
 
     @Override
-    public List<Animal> listWithCategory(String category, String sex, String bodySize) {
+    public List<Animal> listWithCategory(String category, String sex, String bodySize, String status) {
         LambdaQueryWrapper<Animal> wrapper = new LambdaQueryWrapper<>();
         if (category != null && !category.isEmpty() && !"ALL".equalsIgnoreCase(category)) {
             wrapper.eq(Animal::getCategory, category);
@@ -85,6 +85,9 @@ public class AnimalServiceImpl extends ServiceImpl<AnimalMapper, Animal> impleme
         }
         if (bodySize != null && !bodySize.isEmpty() && !"ALL".equalsIgnoreCase(bodySize)) {
             wrapper.eq(Animal::getBodySize, bodySize);
+        }
+        if (status != null && !status.isEmpty() && !"ALL".equalsIgnoreCase(status)) {
+            wrapper.eq(Animal::getStatus, Integer.parseInt(status));
         }
         wrapper.orderByDesc(Animal::getCreateTime);
         return this.list(wrapper);

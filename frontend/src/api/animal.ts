@@ -35,7 +35,7 @@ export async function helloAnimal() {
   return data as { code: number; message: string; data: string }
 }
 
-export async function getAnimalList(params?: { category?: string; sex?: string; bodySize?: string }) {
+export async function getAnimalList(params?: { category?: string; sex?: string; bodySize?: string; status?: string }) {
   const { data } = await http.get('/api/animals', { params })
   return data as { code: number; message: string; data: Animal[] }
 }

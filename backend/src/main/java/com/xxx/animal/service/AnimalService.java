@@ -9,5 +9,5 @@ public interface AnimalService extends IService<Animal> {
     boolean saveAnimal(Animal animal);
     Animal getAnimalWithLocations(Long id);
     Animal getAnimalByNo(String animalNo);
-    List<Animal> listWithCategory(String category, String sex, String bodySize);
+    List<Animal> listWithCategory(String category, String sex, String bodySize, String status);
 }
