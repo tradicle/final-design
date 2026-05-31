@@ -15,6 +15,9 @@ public class DonationRecord {
     private String date;
     private String donor;
     private String item;
+    private String quantity;
+    private String unit;
+    private String remark;
     private Integer sortOrder;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;

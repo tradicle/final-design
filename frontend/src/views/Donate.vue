@@ -2,7 +2,7 @@
 import { computed, reactive, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { getUrgentNeeds, type UrgentNeed } from '../api/donation'
+import { getDonationRecords, getUrgentNeeds, type DonationRecord, type UrgentNeed } from '../api/donation'
 import { createDonationClaim } from '../api/donation-claim'
 import { useUserStore } from '../store/user'
 
@@ -25,47 +25,7 @@ const claimForm = reactive({
   remark: '',
 })
 
-interface DonationRecord {
-  date: string
-  donor: string
-  item: string
-  quantity: number
-  unit: string
-  remark: string
-}
-
-const donationRecords: DonationRecord[] = [
-  { date: '2026-05-28', donor: '李明月', item: '皇家猫粮K36', quantity: 4, unit: '袋', remark: '幼猫专用' },
-  { date: '2026-05-27', donor: '深圳宠物爱心社', item: '豆腐猫砂', quantity: 20, unit: '箱', remark: '原味' },
-  { date: '2026-05-26', donor: '王建国', item: '犬用体内驱虫药', quantity: 50, unit: '片', remark: '中型犬剂量' },
-  { date: '2026-05-25', donor: '陈小雅', item: '宠物尿垫', quantity: 12, unit: '包', remark: 'L码加厚款' },
-  { date: '2026-05-24', donor: '张伟强', item: '顽皮鲜肉猫条', quantity: 30, unit: '盒', remark: '混合口味' },
-  { date: '2026-05-23', donor: '南山义工联', item: '宠物消毒液', quantity: 15, unit: '瓶', remark: '宠乐安品牌' },
-  { date: '2026-05-22', donor: '赵雨婷', item: '猫抓板', quantity: 10, unit: '个', remark: '大号瓦楞纸' },
-  { date: '2026-05-21', donor: '匿名爱心人士', item: '比瑞吉狗粮', quantity: 6, unit: '袋', remark: '15kg装' },
-  { date: '2026-05-20', donor: '刘思远', item: '宠物毛毯', quantity: 18, unit: '条', remark: '加绒保暖款' },
-  { date: '2026-05-19', donor: '喵汪之家志愿者', item: '猫罐头', quantity: 48, unit: '罐', remark: '希宝金罐' },
-  { date: '2026-05-18', donor: '周明辉', item: '皇家猫粮K36', quantity: 3, unit: '袋', remark: '成猫款' },
-  { date: '2026-05-17', donor: '黄丽华', item: '宠物玩具球', quantity: 25, unit: '个', remark: '橡胶发声球' },
-  { date: '2026-05-16', donor: '福田爱宠群', item: '犬用沐浴露', quantity: 8, unit: '瓶', remark: '低敏配方' },
-  { date: '2026-05-15', donor: '林俊杰', item: '幼犬奶粉', quantity: 12, unit: '罐', remark: '贝帮品牌' },
-  { date: '2026-05-14', donor: '郑晓雯', item: '豆腐猫砂', quantity: 16, unit: '箱', remark: '绿茶味' },
-  { date: '2026-05-13', donor: '深圳科技园义工', item: '宠物湿巾', quantity: 30, unit: '包', remark: '无酒精配方' },
-  { date: '2026-05-12', donor: '何志鹏', item: '犬用牵引绳', quantity: 14, unit: '条', remark: '中型犬适用' },
-  { date: '2026-05-11', donor: '匿名爱心人士', item: '猫粮试吃装', quantity: 60, unit: '份', remark: '多品牌混合' },
-  { date: '2026-05-10', donor: '孙婷婷', item: '宠物指甲剪', quantity: 10, unit: '套', remark: '带锉刀' },
-  { date: '2026-05-09', donor: '龙华流浪动物救助', item: '妙鲜包', quantity: 36, unit: '袋', remark: '鸡肉味' },
-  { date: '2026-05-08', donor: '马天宇', item: '宠物航空箱', quantity: 4, unit: '个', remark: '中号' },
-  { date: '2026-05-07', donor: '宝安宠物医院', item: '猫三联疫苗', quantity: 15, unit: '支', remark: '妙三多' },
-  { date: '2026-05-06', donor: '吴小燕', item: '宠物食盆', quantity: 20, unit: '个', remark: '不锈钢双盆' },
-  { date: '2026-05-05', donor: '匿名爱心人士', item: '犬用磨牙棒', quantity: 40, unit: '包', remark: '中大型犬' },
-  { date: '2026-05-04', donor: '罗湖区志愿者', item: '宠物尿垫', quantity: 10, unit: '包', remark: 'XL码' },
-  { date: '2026-05-03', donor: '许志强', item: '皇家猫粮K36', quantity: 5, unit: '袋', remark: '10kg装' },
-  { date: '2026-05-02', donor: '深圳大学义工社', item: '猫爬架', quantity: 3, unit: '个', remark: '多层实木' },
-  { date: '2026-05-01', donor: '蔡佳玲', item: '宠物益生菌', quantity: 24, unit: '盒', remark: '布拉迪酵母' },
-  { date: '2026-04-30', donor: '南山社区爱心群', item: '比瑞吉狗粮', quantity: 8, unit: '袋', remark: '小型犬款' },
-  { date: '2026-04-29', donor: '韩雨桐', item: '猫薄荷玩具', quantity: 22, unit: '个', remark: '含猫薄荷填充' },
-]
+const donationRecords = ref<DonationRecord[]>([])
 
 function resetClaimForm() {
   claimForm.quantity = ''
@@ -119,14 +79,22 @@ async function submitClaim() {
 
 const pagedDonationRecords = computed(() => {
   const start = (currentPage.value - 1) * pageSize
-  return donationRecords.slice(start, start + pageSize)
+  return donationRecords.value.slice(start, start + pageSize)
 })
+
+async function loadDonationRecords() {
+  try {
+    const res = await getDonationRecords()
+    if (res.code === 0) donationRecords.value = res.data
+  } catch (e) { console.error(e) }
+}
 
 onMounted(async () => {
   try {
     const urgentRes = await getUrgentNeeds()
     if (urgentRes.code === 0) urgentNeeds.value = urgentRes.data
   } catch (e) { console.error(e) }
+  loadDonationRecords()
 })
 </script>
 

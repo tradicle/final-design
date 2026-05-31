@@ -38,7 +38,7 @@ const metrics = ref<DashboardMetricsRow>({ totalRescueCount: '2680', adoptionSuc
 const weeklyForm = ref<WeeklyUpdateRow>({ title: '', description: '', sortOrder: 1 })
 const transparencyForm = ref<TransparencyRowManage>({ month: '', income: '', expense: '', note: '', sortOrder: 1 })
 const urgentForm = ref<UrgentNeedRow>({ name: '', gap: '', updatedAt: '', sortOrder: 1 })
-const donationForm = ref<DonationRecordRow>({ date: '', donor: '', item: '', sortOrder: 1 })
+const donationForm = ref<DonationRecordRow>({ date: '', donor: '', item: '', quantity: '', unit: '', remark: '', sortOrder: 1 })
 
 function increaseSortValue(target: { sortOrder: number }) {
   target.sortOrder = Math.max(1, Number(target.sortOrder || 1) + 1)
@@ -146,7 +146,7 @@ async function saveDonation(row?: DonationRecordRow) {
   const res = payload.id ? await updateDonationRecord(payload.id, payload) : await createDonationRecord(payload)
   if (res.code === 0) {
     ElMessage.success('保存成功')
-    if (!row) donationForm.value = { date: '', donor: '', item: '', sortOrder: 1 }
+    if (!row) donationForm.value = { date: '', donor: '', item: '', quantity: '', unit: '', remark: '', sortOrder: 1 }
     reload()
   }
 }
@@ -287,6 +287,9 @@ onMounted(reload)
             <el-input v-model="donationForm.date" placeholder="日期，如 2026-04-01" />
             <el-input v-model="donationForm.donor" placeholder="捐助者" />
             <el-input v-model="donationForm.item" placeholder="捐助内容" />
+            <el-input v-model="donationForm.quantity" placeholder="数量" />
+            <el-input v-model="donationForm.unit" placeholder="单位" />
+            <el-input v-model="donationForm.remark" placeholder="备注" />
             <div class="sort-stepper">
               <el-button class="sort-btn" @click="decreaseSortValue(donationForm)">-</el-button>
               <el-input-number v-model="donationForm.sortOrder" :min="1" :controls="false" class="sort-input" />
@@ -298,6 +301,9 @@ onMounted(reload)
             <el-table-column label="日期"><template #default="{ row }"><el-input v-model="row.date" /></template></el-table-column>
             <el-table-column label="捐助者"><template #default="{ row }"><el-input v-model="row.donor" /></template></el-table-column>
             <el-table-column label="内容"><template #default="{ row }"><el-input v-model="row.item" /></template></el-table-column>
+            <el-table-column label="数量"><template #default="{ row }"><el-input v-model="row.quantity" /></template></el-table-column>
+            <el-table-column label="单位"><template #default="{ row }"><el-input v-model="row.unit" /></template></el-table-column>
+            <el-table-column label="备注"><template #default="{ row }"><el-input v-model="row.remark" /></template></el-table-column>
             <el-table-column label="排序" width="170">
               <template #default="{ row }">
                 <div class="sort-stepper">

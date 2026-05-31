@@ -29,6 +29,9 @@ export interface DonationRecordRow {
   date: string
   donor: string
   item: string
+  quantity: string
+  unit: string
+  remark: string
   sortOrder: number
 }
 

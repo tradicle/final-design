@@ -4,6 +4,9 @@ export interface DonationRecord {
   date: string
   donor: string
   item: string
+  quantity: string
+  unit: string
+  remark: string
 }
 
 export interface UrgentNeed {
