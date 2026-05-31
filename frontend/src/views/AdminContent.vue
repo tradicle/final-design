@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import {
   listWeeklyUpdates,
@@ -33,6 +33,12 @@ const weeklyRows = ref<WeeklyUpdateRow[]>([])
 const transparencyRows = ref<TransparencyRowManage[]>([])
 const urgentRows = ref<UrgentNeedRow[]>([])
 const donationRows = ref<DonationRecordRow[]>([])
+const donationPage = ref(1)
+const donationPageSize = 10
+const pagedDonationRows = computed(() => {
+  const start = (donationPage.value - 1) * donationPageSize
+  return donationRows.value.slice(start, start + donationPageSize)
+})
 const metrics = ref<DashboardMetricsRow>({ totalRescueCount: '2680', adoptionSuccessBase: '1930' })
 
 const weeklyForm = ref<WeeklyUpdateRow>({ title: '', description: '', sortOrder: 1 })
@@ -297,7 +303,7 @@ onMounted(reload)
             </div>
             <el-button type="primary" @click="saveDonation()">新增</el-button>
           </div>
-          <el-table :data="donationRows">
+          <el-table :data="pagedDonationRows">
             <el-table-column label="日期"><template #default="{ row }"><el-input v-model="row.date" /></template></el-table-column>
             <el-table-column label="捐助者"><template #default="{ row }"><el-input v-model="row.donor" /></template></el-table-column>
             <el-table-column label="内容"><template #default="{ row }"><el-input v-model="row.item" /></template></el-table-column>
@@ -320,6 +326,15 @@ onMounted(reload)
               </template>
             </el-table-column>
           </el-table>
+          <div class="donation-pagination">
+            <el-pagination
+              v-model:current-page="donationPage"
+              background
+              layout="prev, pager, next"
+              :page-size="donationPageSize"
+              :total="donationRows.length"
+            />
+          </div>
         </el-tab-pane>
       </el-tabs>
     </el-card>
@@ -364,5 +379,11 @@ onMounted(reload)
 
 .sort-input {
   width: 72px;
+}
+
+.donation-pagination {
+  margin-top: 16px;
+  display: flex;
+  justify-content: center;
 }
 </style>
