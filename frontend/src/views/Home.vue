@@ -17,7 +17,7 @@ const weeklyUpdates = ref<WeeklyUpdate[]>([])
 
 const homeNews = computed(() => newsList.value.slice(0, 5))
 const catAnimals = computed(() => starAnimals.value.filter((item) => item.category === 'CAT').slice(0, 5))
-const dogAnimals = computed(() => starAnimals.value.filter((item) => item.category !== 'CAT').slice(0, 5))
+const dogAnimals = computed(() => starAnimals.value.filter((item) => item.category === 'DOG').slice(0, 5))
 const featuredActivities = computed(() => activityList.value.slice(0, 3))
 
 function go(path: string) {
@@ -130,7 +130,7 @@ onMounted(async () => {
       <div class="container">
         <div class="section-header">
           <h2>待领养的猫猫</h2>
-          <el-button link @click="go('/animals')">
+          <el-button link @click="go('/animals?category=CAT')">
             查看全部
             <el-icon><ArrowRight /></el-icon>
           </el-button>
@@ -150,6 +150,10 @@ onMounted(async () => {
 
         <div class="section-header second-line">
           <h2>待领养的狗狗</h2>
+          <el-button link @click="go('/animals?category=DOG')">
+            查看全部
+            <el-icon><ArrowRight /></el-icon>
+          </el-button>
         </div>
         <div class="animal-grid">
           <div class="animal-card" v-for="animal in dogAnimals" :key="`dog-${animal.id}`" @click="toPet(animal)">

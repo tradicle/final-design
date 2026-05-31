@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref, watch, nextTick, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { createAnimal, getAnimalList, type Animal } from '../api/animal'
 import { uploadFile } from '../api/file'
 import { useUserStore } from '../store/user'
@@ -10,6 +10,7 @@ import { Plus, Location, Search } from '@element-plus/icons-vue'
 import { getAssetUrl } from '../utils/assets'
 
 const router = useRouter()
+const route = useRoute()
 const userStore = useUserStore()
 const animals = ref<Animal[]>([])
 const loading = ref(false)
@@ -19,7 +20,7 @@ const submitLoading = ref(false)
 const isAdmin = computed(() => userStore.user?.role === 'ADMIN')
 
 const filters = reactive({
-  category: 'ALL',
+  category: ['CAT', 'DOG'].includes(route.query.category as string) ? route.query.category : 'ALL',
   sex: 'ALL',
   bodySize: 'ALL',
   status: 'ALL'
