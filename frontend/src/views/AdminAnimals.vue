@@ -37,7 +37,7 @@ const query = reactive({
   category: 'ALL',
   status: -1,
   page: 1,
-  pageSize: 8,
+  pageSize: 36,
 })
 
 const form = reactive<Partial<Animal>>({
@@ -533,11 +533,9 @@ onBeforeUnmount(() => {
         v-model:current-page="query.page"
         v-model:page-size="query.pageSize"
         background
-        layout="total, sizes, prev, pager, next"
-        :page-sizes="[8, 12, 16]"
+        layout="total, prev, pager, next"
         :total="total"
         @current-change="load"
-        @size-change="search"
       />
     </div>
   </el-card>

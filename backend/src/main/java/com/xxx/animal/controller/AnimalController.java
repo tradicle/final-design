@@ -67,7 +67,7 @@ public class AnimalController {
             @RequestParam(required = false) String category,
             @RequestParam(required = false) Integer status,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "12") int pageSize
+            @RequestParam(defaultValue = "36") int pageSize
     ) {
         LambdaQueryWrapper<Animal> wrapper = new LambdaQueryWrapper<>();
         if (keyword != null && !keyword.isBlank()) {
