@@ -95,15 +95,11 @@ function logout() {
       <div class="footer-inner">
         <div class="footer-col">
           <h3>联系我们</h3>
-          <p>地址：深圳市南山区沙河街道睿印商城 B2 层下沉广场喵喵领养小屋</p>
+          <p>地址：杭州市浙江工业大学</p>
           <p>电话：0755-86035169</p>
-          <p>邮箱：contact@animal-rescue.local</p>
+          <p>邮箱：3553088069@qq.com</p>
         </div>
-        <div class="footer-col">
-          <h3>友情链接</h3>
-          <p>校园流浪动物救助联盟</p>
-          <p>深圳本地领养合作组织</p>
-        </div>
+
         <div class="footer-col">
           <h3>关注我们</h3>
           <p>微信公众号：毛茸茸之家</p>
