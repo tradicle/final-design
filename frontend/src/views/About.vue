@@ -59,7 +59,7 @@ const router = useRouter()
 
         <section class="contact-block">
           <h3>联系与公示</h3>
-          <p><strong>地址：</strong>深圳市南山区沙河街道睿印商城 B2 层下沉广场喵喵领养小屋</p>
+          <p><strong>地址：</strong>杭州市浙江工业大学</p>
           <p><strong>电话：</strong>0755-86035169</p>
           <p><strong>服务时间：</strong>周一至周日 9:00-18:00</p>
           <div class="actions">
