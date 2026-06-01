@@ -68,6 +68,7 @@ function logout() {
           <el-menu-item index="/community">社区</el-menu-item>
           <el-menu-item index="/activities">爱心活动</el-menu-item>
           <el-menu-item index="/donate">捐赠</el-menu-item>
+          <el-menu-item index="/transparency">透明公示</el-menu-item>
           <el-menu-item index="/knowledge">小常识</el-menu-item>
           <el-menu-item index="/about">关于我们</el-menu-item>
         </el-menu>
