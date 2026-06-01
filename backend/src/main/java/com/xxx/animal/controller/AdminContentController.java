@@ -12,7 +12,6 @@ import com.xxx.animal.service.SystemConfigService;
 import com.xxx.animal.service.TransparencyRecordService;
 import com.xxx.animal.service.UrgentNeedService;
 import com.xxx.animal.service.WeeklyUpdateService;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -41,6 +40,8 @@ public class AdminContentController {
         this.systemConfigService = systemConfigService;
     }
 
+    // ==================== 每周更新 ====================
+
     @GetMapping("/weekly-updates")
     public Result<List<WeeklyUpdate>> listWeeklyUpdates() {
         LambdaQueryWrapper<WeeklyUpdate> wrapper = new LambdaQueryWrapper<>();
@@ -49,11 +50,8 @@ public class AdminContentController {
     }
 
     @PostMapping("/weekly-updates")
-    @Transactional
     public Result<Boolean> createWeeklyUpdate(@RequestBody WeeklyUpdate payload) {
-        shiftWeeklyUpdatesSortOrder();
-        payload.setSortOrder(1);
-        return Result.ok(weeklyUpdateService.save(payload));
+        return Result.ok(weeklyUpdateService.createWithSortShift(payload));
     }
 
     @PutMapping("/weekly-updates/{id}")
@@ -67,6 +65,8 @@ public class AdminContentController {
         return Result.ok(weeklyUpdateService.removeById(id));
     }
 
+    // ==================== 透明公示 ====================
+
     @GetMapping("/transparency")
     public Result<List<TransparencyRecord>> listTransparency() {
         LambdaQueryWrapper<TransparencyRecord> wrapper = new LambdaQueryWrapper<>();
@@ -75,12 +75,9 @@ public class AdminContentController {
     }
 
     @PostMapping("/transparency")
-    @Transactional
     public Result<Boolean> createTransparency(@RequestBody TransparencyRecord payload) {
-        shiftTransparencySortOrder();
-        payload.setSortOrder(1);
         payload.setExpense(normalizeCurrencyInput(payload.getExpense()));
-        return Result.ok(transparencyRecordService.save(payload));
+        return Result.ok(transparencyRecordService.createWithSortShift(payload));
     }
 
     @PutMapping("/transparency/{id}")
@@ -95,6 +92,8 @@ public class AdminContentController {
         return Result.ok(transparencyRecordService.removeById(id));
     }
 
+    // ==================== 急需物资 ====================
+
     @GetMapping("/urgent-needs")
     public Result<List<UrgentNeed>> listUrgentNeeds() {
         LambdaQueryWrapper<UrgentNeed> wrapper = new LambdaQueryWrapper<>();
@@ -103,11 +102,8 @@ public class AdminContentController {
     }
 
     @PostMapping("/urgent-needs")
-    @Transactional
     public Result<Boolean> createUrgentNeed(@RequestBody UrgentNeed payload) {
-        shiftUrgentNeedsSortOrder();
-        payload.setSortOrder(1);
-        return Result.ok(urgentNeedService.save(payload));
+        return Result.ok(urgentNeedService.createWithSortShift(payload));
     }
 
     @PutMapping("/urgent-needs/{id}")
@@ -121,6 +117,8 @@ public class AdminContentController {
         return Result.ok(urgentNeedService.removeById(id));
     }
 
+    // ==================== 捐助公示 ====================
+
     @GetMapping("/donation-records")
     public Result<List<DonationRecord>> listDonationRecords() {
         LambdaQueryWrapper<DonationRecord> wrapper = new LambdaQueryWrapper<>();
@@ -129,11 +127,8 @@ public class AdminContentController {
     }
 
     @PostMapping("/donation-records")
-    @Transactional
     public Result<Boolean> createDonationRecord(@RequestBody DonationRecord payload) {
-        shiftDonationRecordsSortOrder();
-        payload.setSortOrder(1);
-        return Result.ok(donationRecordService.save(payload));
+        return Result.ok(donationRecordService.createWithSortShift(payload));
     }
 
     @PutMapping("/donation-records/{id}")
@@ -146,6 +141,8 @@ public class AdminContentController {
     public Result<Boolean> deleteDonationRecord(@PathVariable Long id) {
         return Result.ok(donationRecordService.removeById(id));
     }
+
+    // ==================== 辅助方法 ====================
 
     @GetMapping("/health")
     public Result<Map<String, String>> health() {
@@ -167,42 +164,7 @@ public class AdminContentController {
         return result.isBlank() ? "0" : result;
     }
 
-    private void shiftWeeklyUpdatesSortOrder() {
-        List<WeeklyUpdate> rows = weeklyUpdateService.list();
-        if (rows.isEmpty()) {
-            return;
-        }
-        rows.forEach(item -> item.setSortOrder((item.getSortOrder() == null ? 0 : item.getSortOrder()) + 1));
-        weeklyUpdateService.updateBatchById(rows);
-    }
-
-    private void shiftTransparencySortOrder() {
-        List<TransparencyRecord> rows = transparencyRecordService.list();
-        if (rows.isEmpty()) {
-            return;
-        }
-        rows.forEach(item -> item.setSortOrder((item.getSortOrder() == null ? 0 : item.getSortOrder()) + 1));
-        transparencyRecordService.updateBatchById(rows);
-    }
-
-    private void shiftUrgentNeedsSortOrder() {
-        List<UrgentNeed> rows = urgentNeedService.list();
-        if (rows.isEmpty()) {
-            return;
-        }
-        rows.forEach(item -> item.setSortOrder((item.getSortOrder() == null ? 0 : item.getSortOrder()) + 1));
-        urgentNeedService.updateBatchById(rows);
-    }
-
-    private void shiftDonationRecordsSortOrder() {
-        List<DonationRecord> rows = donationRecordService.list();
-        if (rows.isEmpty()) {
-            return;
-        }
-        rows.forEach(item -> item.setSortOrder((item.getSortOrder() == null ? 0 : item.getSortOrder()) + 1));
-        donationRecordService.updateBatchById(rows);
-    }
-
+    // ==================== 仪表盘统计 ====================
 
     @GetMapping("/dashboard-metrics")
     public Result<Map<String, String>> getDashboardMetrics() {

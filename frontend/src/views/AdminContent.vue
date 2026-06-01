@@ -187,7 +187,7 @@ onMounted(reload)
       </el-card>
       <el-tabs v-model="active">
         <el-tab-pane label="每周更新" name="weekly">
-          <div class="inline-form">
+          <div class="inline-form" style="grid-template-columns: 1fr 1.5fr auto auto;">
             <el-input v-model="weeklyForm.title" placeholder="标题" />
             <el-input v-model="weeklyForm.description" placeholder="描述" />
             <div class="sort-stepper">
@@ -219,7 +219,7 @@ onMounted(reload)
         </el-tab-pane>
 
         <el-tab-pane label="透明公示" name="transparency">
-          <div class="inline-form">
+          <div class="inline-form" style="grid-template-columns: 1fr 1fr 1fr 1.2fr auto auto;">
             <el-input v-model="transparencyForm.month" placeholder="月份，如 2026-04" />
             <el-input v-model="transparencyForm.income" placeholder="收入，如 ¥42,300" />
             <el-input v-model="transparencyForm.expense" placeholder="支出，如 39180" />
@@ -255,7 +255,7 @@ onMounted(reload)
         </el-tab-pane>
 
         <el-tab-pane label="急需物资" name="urgent">
-          <div class="inline-form">
+          <div class="inline-form" style="grid-template-columns: 1fr 1fr 1fr auto auto;">
             <el-input v-model="urgentForm.name" placeholder="物资名称" />
             <el-input v-model="urgentForm.gap" placeholder="缺口，如 30 袋" />
             <el-input v-model="urgentForm.updatedAt" placeholder="更新日期，如 2026-04-05" />
@@ -289,7 +289,7 @@ onMounted(reload)
         </el-tab-pane>
 
         <el-tab-pane label="捐助公示" name="donation">
-          <div class="inline-form">
+          <div class="inline-form" style="grid-template-columns: 1.2fr 1fr 1.2fr 0.7fr 0.7fr 1.2fr auto auto;">
             <el-input v-model="donationForm.date" placeholder="日期，如 2026-04-01" />
             <el-input v-model="donationForm.donor" placeholder="捐助者" />
             <el-input v-model="donationForm.item" placeholder="捐助内容" />
@@ -345,7 +345,6 @@ onMounted(reload)
 .page { padding: 0; }
 .inline-form {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
   gap: 10px;
   margin-bottom: 12px;
 }
