@@ -172,7 +172,7 @@ onMounted(reload)
     <el-card v-loading="loading" shadow="never">
       <template #header>内容运营（每周更新/公示）</template>
       <el-card shadow="never" class="metrics-card">
-        <template #header>首页核心统计（可编辑）</template>
+        <template #header>首页核心统计</template>
         <div class="metrics-form">
           <div class="metric-field">
             <el-tag effect="plain">累计救助</el-tag>
