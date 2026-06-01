@@ -7,7 +7,6 @@ import {
   createActivity,
   deleteActivity,
   getAdminActivityList,
-  importActivityWord,
   type ActivityItem,
   updateActivity,
 } from '../api/activity'
@@ -17,7 +16,7 @@ import RichTextEditor from '../components/RichTextEditor.vue'
 const loading = ref(false)
 const saving = ref(false)
 const uploading = ref(false)
-const importingWord = ref(false)
+
 const rows = ref<ActivityItem[]>([])
 const dialogVisible = ref(false)
 const editingId = ref<number | null>(null)
@@ -120,24 +119,6 @@ async function uploadCover(options: UploadRequestOptions) {
   }
 }
 
-async function importWord(options: UploadRequestOptions) {
-  importingWord.value = true
-  try {
-    const res = await importActivityWord(options.file as File)
-    if (res.code === 0) {
-      form.title = res.data.title
-      form.summary = res.data.summary
-      form.content = res.data.content
-      ElMessage.success('Word 内容已导入，请校对后保存')
-      if (!dialogVisible.value) dialogVisible.value = true
-    } else {
-      ElMessage.error(res.message || 'Word 导入失败')
-    }
-  } finally {
-    importingWord.value = false
-  }
-}
-
 onMounted(load)
 </script>
 
@@ -147,9 +128,6 @@ onMounted(load)
       <div class="header-bar">
         <span>爱心活动管理</span>
         <div class="header-actions">
-          <el-upload action="" :show-file-list="false" accept=".doc,.docx" :http-request="importWord">
-            <el-button :loading="importingWord">导入 Word 初稿</el-button>
-          </el-upload>
           <el-button type="primary" @click="openCreate">新增活动</el-button>
         </div>
       </div>
