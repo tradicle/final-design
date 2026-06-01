@@ -35,7 +35,7 @@ function toNewsTarget(item: NewsItem) {
 
 onMounted(async () => {
   try {
-    const res = await getAnimalList()
+    const res = await getAnimalList({ status: '1' })
     if (res.code === 0) {
       starAnimals.value = res.data
     }
@@ -130,7 +130,7 @@ onMounted(async () => {
       <div class="container">
         <div class="section-header">
           <h2>待领养的猫猫</h2>
-          <el-button link @click="go('/animals?category=CAT')">
+          <el-button link @click="go('/animals?category=CAT&status=1')">
             查看全部
             <el-icon><ArrowRight /></el-icon>
           </el-button>
@@ -150,7 +150,7 @@ onMounted(async () => {
 
         <div class="section-header second-line">
           <h2>待领养的狗狗</h2>
-          <el-button link @click="go('/animals?category=DOG')">
+          <el-button link @click="go('/animals?category=DOG&status=1')">
             查看全部
             <el-icon><ArrowRight /></el-icon>
           </el-button>

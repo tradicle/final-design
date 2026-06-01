@@ -23,7 +23,7 @@ const filters = reactive({
   category: ['CAT', 'DOG'].includes(route.query.category as string) ? route.query.category : 'ALL',
   sex: 'ALL',
   bodySize: 'ALL',
-  status: 'ALL'
+  status: ['0', '1'].includes(route.query.status as string) ? (route.query.status as string) : 'ALL'
 })
 
 const form = reactive({
