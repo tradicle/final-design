@@ -40,18 +40,18 @@ public class AdminContentController {
         this.systemConfigService = systemConfigService;
     }
 
-    // ==================== 每周更新 ====================
+    // ==================== 每周更新（最新创建排最前，无手动排序） ====================
 
     @GetMapping("/weekly-updates")
     public Result<List<WeeklyUpdate>> listWeeklyUpdates() {
         LambdaQueryWrapper<WeeklyUpdate> wrapper = new LambdaQueryWrapper<>();
-        wrapper.orderByAsc(WeeklyUpdate::getSortOrder).orderByDesc(WeeklyUpdate::getId);
+        wrapper.orderByDesc(WeeklyUpdate::getId);
         return Result.ok(weeklyUpdateService.list(wrapper));
     }
 
     @PostMapping("/weekly-updates")
     public Result<Boolean> createWeeklyUpdate(@RequestBody WeeklyUpdate payload) {
-        return Result.ok(weeklyUpdateService.createWithSortShift(payload));
+        return Result.ok(weeklyUpdateService.save(payload));
     }
 
     @PutMapping("/weekly-updates/{id}")
@@ -65,19 +65,19 @@ public class AdminContentController {
         return Result.ok(weeklyUpdateService.removeById(id));
     }
 
-    // ==================== 透明公示 ====================
+    // ==================== 透明公示（最新创建排最前，无手动排序） ====================
 
     @GetMapping("/transparency")
     public Result<List<TransparencyRecord>> listTransparency() {
         LambdaQueryWrapper<TransparencyRecord> wrapper = new LambdaQueryWrapper<>();
-        wrapper.orderByAsc(TransparencyRecord::getSortOrder).orderByDesc(TransparencyRecord::getMonth);
+        wrapper.orderByDesc(TransparencyRecord::getId);
         return Result.ok(transparencyRecordService.list(wrapper));
     }
 
     @PostMapping("/transparency")
     public Result<Boolean> createTransparency(@RequestBody TransparencyRecord payload) {
         payload.setExpense(normalizeCurrencyInput(payload.getExpense()));
-        return Result.ok(transparencyRecordService.createWithSortShift(payload));
+        return Result.ok(transparencyRecordService.save(payload));
     }
 
     @PutMapping("/transparency/{id}")
@@ -92,7 +92,7 @@ public class AdminContentController {
         return Result.ok(transparencyRecordService.removeById(id));
     }
 
-    // ==================== 急需物资 ====================
+    // ==================== 急需物资（保留手动排序，创建置顶，删除重排） ====================
 
     @GetMapping("/urgent-needs")
     public Result<List<UrgentNeed>> listUrgentNeeds() {
@@ -114,21 +114,21 @@ public class AdminContentController {
 
     @DeleteMapping("/urgent-needs/{id}")
     public Result<Boolean> deleteUrgentNeed(@PathVariable Long id) {
-        return Result.ok(urgentNeedService.removeById(id));
+        return Result.ok(urgentNeedService.deleteWithRenumber(id));
     }
 
-    // ==================== 捐助公示 ====================
+    // ==================== 捐助公示（最新创建排最前，无手动排序） ====================
 
     @GetMapping("/donation-records")
     public Result<List<DonationRecord>> listDonationRecords() {
         LambdaQueryWrapper<DonationRecord> wrapper = new LambdaQueryWrapper<>();
-        wrapper.orderByAsc(DonationRecord::getSortOrder).orderByDesc(DonationRecord::getId);
+        wrapper.orderByDesc(DonationRecord::getId);
         return Result.ok(donationRecordService.list(wrapper));
     }
 
     @PostMapping("/donation-records")
     public Result<Boolean> createDonationRecord(@RequestBody DonationRecord payload) {
-        return Result.ok(donationRecordService.createWithSortShift(payload));
+        return Result.ok(donationRecordService.save(payload));
     }
 
     @PutMapping("/donation-records/{id}")

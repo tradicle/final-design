@@ -187,28 +187,14 @@ onMounted(reload)
       </el-card>
       <el-tabs v-model="active">
         <el-tab-pane label="每周更新" name="weekly">
-          <div class="inline-form" style="grid-template-columns: 1fr 1.5fr auto auto;">
+          <div class="inline-form" style="grid-template-columns: 1fr 1.5fr auto;">
             <el-input v-model="weeklyForm.title" placeholder="标题" />
             <el-input v-model="weeklyForm.description" placeholder="描述" />
-            <div class="sort-stepper">
-              <el-button class="sort-btn" @click="decreaseSortValue(weeklyForm)">-</el-button>
-              <el-input-number v-model="weeklyForm.sortOrder" :min="1" :controls="false" class="sort-input" />
-              <el-button class="sort-btn" @click="increaseSortValue(weeklyForm)">+</el-button>
-            </div>
             <el-button type="primary" @click="saveWeekly()">新增</el-button>
           </div>
           <el-table :data="weeklyRows">
             <el-table-column prop="title" label="标题"><template #default="{ row }"><el-input v-model="row.title" /></template></el-table-column>
             <el-table-column prop="description" label="描述"><template #default="{ row }"><el-input v-model="row.description" /></template></el-table-column>
-            <el-table-column prop="sortOrder" label="排序" width="170">
-              <template #default="{ row }">
-                <div class="sort-stepper">
-                  <el-button class="sort-btn" @click="decreaseSortValue(row)">-</el-button>
-                  <el-input-number v-model="row.sortOrder" :min="1" :controls="false" class="sort-input" />
-                  <el-button class="sort-btn" @click="increaseSortValue(row)">+</el-button>
-                </div>
-              </template>
-            </el-table-column>
             <el-table-column label="操作" width="180">
               <template #default="{ row }">
                 <el-button size="small" type="primary" @click="saveWeekly(row)">保存</el-button>
@@ -219,16 +205,11 @@ onMounted(reload)
         </el-tab-pane>
 
         <el-tab-pane label="透明公示" name="transparency">
-          <div class="inline-form" style="grid-template-columns: 1fr 1fr 1fr 1.2fr auto auto;">
+          <div class="inline-form" style="grid-template-columns: 1fr 1fr 1fr 1.2fr auto;">
             <el-input v-model="transparencyForm.month" placeholder="月份，如 2026-04" />
             <el-input v-model="transparencyForm.income" placeholder="收入，如 ¥42,300" />
             <el-input v-model="transparencyForm.expense" placeholder="支出，如 39180" />
             <el-input v-model="transparencyForm.note" placeholder="说明" />
-            <div class="sort-stepper">
-              <el-button class="sort-btn" @click="decreaseSortValue(transparencyForm)">-</el-button>
-              <el-input-number v-model="transparencyForm.sortOrder" :min="1" :controls="false" class="sort-input" />
-              <el-button class="sort-btn" @click="increaseSortValue(transparencyForm)">+</el-button>
-            </div>
             <el-button type="primary" @click="saveTransparency()">新增</el-button>
           </div>
           <el-table :data="transparencyRows">
@@ -236,15 +217,6 @@ onMounted(reload)
             <el-table-column label="收入"><template #default="{ row }"><el-input v-model="row.income" /></template></el-table-column>
             <el-table-column label="支出"><template #default="{ row }"><el-input v-model="row.expense" placeholder="只输入数字" /></template></el-table-column>
             <el-table-column label="说明"><template #default="{ row }"><el-input v-model="row.note" /></template></el-table-column>
-            <el-table-column label="排序" width="170">
-              <template #default="{ row }">
-                <div class="sort-stepper">
-                  <el-button class="sort-btn" @click="decreaseSortValue(row)">-</el-button>
-                  <el-input-number v-model="row.sortOrder" :min="1" :controls="false" class="sort-input" />
-                  <el-button class="sort-btn" @click="increaseSortValue(row)">+</el-button>
-                </div>
-              </template>
-            </el-table-column>
             <el-table-column label="操作" width="180">
               <template #default="{ row }">
                 <el-button size="small" type="primary" @click="saveTransparency(row)">保存</el-button>
@@ -289,18 +261,13 @@ onMounted(reload)
         </el-tab-pane>
 
         <el-tab-pane label="捐助公示" name="donation">
-          <div class="inline-form" style="grid-template-columns: 1.2fr 1fr 1.2fr 0.7fr 0.7fr 1.2fr auto auto;">
+          <div class="inline-form" style="grid-template-columns: 1.2fr 1fr 1.2fr 0.7fr 0.7fr 1.2fr auto;">
             <el-input v-model="donationForm.date" placeholder="日期，如 2026-04-01" />
             <el-input v-model="donationForm.donor" placeholder="捐助者" />
             <el-input v-model="donationForm.item" placeholder="捐助内容" />
             <el-input v-model="donationForm.quantity" placeholder="数量" />
             <el-input v-model="donationForm.unit" placeholder="单位" />
             <el-input v-model="donationForm.remark" placeholder="备注" />
-            <div class="sort-stepper">
-              <el-button class="sort-btn" @click="decreaseSortValue(donationForm)">-</el-button>
-              <el-input-number v-model="donationForm.sortOrder" :min="1" :controls="false" class="sort-input" />
-              <el-button class="sort-btn" @click="increaseSortValue(donationForm)">+</el-button>
-            </div>
             <el-button type="primary" @click="saveDonation()">新增</el-button>
           </div>
           <el-table :data="pagedDonationRows">
@@ -310,15 +277,6 @@ onMounted(reload)
             <el-table-column label="数量"><template #default="{ row }"><el-input v-model="row.quantity" /></template></el-table-column>
             <el-table-column label="单位"><template #default="{ row }"><el-input v-model="row.unit" /></template></el-table-column>
             <el-table-column label="备注"><template #default="{ row }"><el-input v-model="row.remark" /></template></el-table-column>
-            <el-table-column label="排序" width="170">
-              <template #default="{ row }">
-                <div class="sort-stepper">
-                  <el-button class="sort-btn" @click="decreaseSortValue(row)">-</el-button>
-                  <el-input-number v-model="row.sortOrder" :min="1" :controls="false" class="sort-input" />
-                  <el-button class="sort-btn" @click="increaseSortValue(row)">+</el-button>
-                </div>
-              </template>
-            </el-table-column>
             <el-table-column label="操作" width="180">
               <template #default="{ row }">
                 <el-button size="small" type="primary" @click="saveDonation(row)">保存</el-button>
